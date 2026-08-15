@@ -64,6 +64,181 @@ function countUp(el, target) {
 }
 
 
+
+/* =====================================================================
+   MEDIA RESOLVER · פותר תמונות חופשיות מוויקישיתוף בזמן ריצה
+   שתי קריאות API בלבד, תוצאה נשמרת ב-sessionStorage ל-24 שעות.
+   רק מדיה שמאוחסנת בוויקישיתוף מוצגת — כלומר רק רישיונות חופשיים.
+   ===================================================================== */
+const M = { map: {}, done: false, waiters: [] };
+const M_CACHE_KEY = 'retzach.media.v1';
+const M_TTL = 864e5; // 24h
+
+function mCacheRead() {
+  try {
+    const raw = sessionStorage.getItem(M_CACHE_KEY);
+    if (!raw) return null;
+    const o = JSON.parse(raw);
+    if (!o || Date.now() - o.t > M_TTL) return null;
+    return o.d;
+  } catch (e) { return null; }
+}
+function mCacheWrite(d) {
+  try { sessionStorage.setItem(M_CACHE_KEY, JSON.stringify({ t: Date.now(), d })); } catch (e) {}
+}
+
+const api = (host, params) =>
+  fetch(`https://${host}/w/api.php?${new URLSearchParams({ format: 'json', origin: '*', ...params })}`,
+        { mode: 'cors', credentials: 'omit' }).then(r => r.json());
+
+const chunk = (a, n) => a.reduce((o, x, i) => (i % n ? o[o.length - 1].push(x) : o.push([x]), o), []);
+
+/* גרד תגיות HTML משדות המטא-דאטה של ויקישיתוף */
+function plain(html) {
+  if (!html) return '';
+  const d = document.createElement('div');
+  d.innerHTML = html;
+  return (d.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 90);
+}
+
+async function loadMedia() {
+  const cached = mCacheRead();
+  if (cached) { M.map = cached; M.done = true; return M.map; }
+
+  /* מצב מועדף: תמונות שהורדו לשרת שלנו (tools/fetch-media.mjs) */
+  try {
+    const r = await fetch('/img/commons/manifest.json', { cache: 'no-cache' });
+    if (r.ok) {
+      const man = await r.json();
+      if (man && Object.keys(man).length) {
+        M.map = man; M.done = true; mCacheWrite(man);
+        M.waiters.splice(0).forEach(fn => { try { fn(); } catch (e) {} });
+        return M.map;
+      }
+    }
+  } catch (e) { /* אין מניפסט — ממשיכים ל-API החי */ }
+
+  const out = {};
+  try {
+    /* --- שלב 1: כותרת ערך בוויקיפדיה → שם קובץ תמונת הפתיח --- */
+    const wikiKeys = Object.keys(MEDIA).filter(k => MEDIA[k].wiki);
+    const artToFile = {};
+    for (const part of chunk([...new Set(wikiKeys.map(k => MEDIA[k].wiki))], 40)) {
+      const r = await api('en.wikipedia.org', {
+        action: 'query', prop: 'pageimages', piprop: 'name', pilicense: 'free',
+        redirects: '1', titles: part.join('|')
+      });
+      const pages = (r.query && r.query.pages) || {};
+      const norm = {};
+      ((r.query && r.query.normalized) || []).forEach(n => norm[n.to] = n.from);
+      ((r.query && r.query.redirects) || []).forEach(n => norm[n.to] = norm[n.from] || n.from);
+      Object.values(pages).forEach(pg => {
+        if (!pg.pageimage) return;
+        const original = norm[pg.title] || pg.title;
+        artToFile[original] = 'File:' + pg.pageimage;
+        artToFile[pg.title] = 'File:' + pg.pageimage;
+      });
+    }
+
+    /* --- שלב 2: פרטי הקובץ + רישיון, מוויקישיתוף בלבד --- */
+    const need = {};
+    Object.keys(MEDIA).forEach(k => {
+      const m = MEDIA[k];
+      const f = m.commons || artToFile[m.wiki];
+      if (f) (need[f] = need[f] || []).push(k);
+    });
+
+    for (const part of chunk(Object.keys(need), 40)) {
+      const r = await api('commons.wikimedia.org', {
+        action: 'query', prop: 'imageinfo',
+        iiprop: 'url|extmetadata|mime',
+        iiurlwidth: '1100',
+        iiextmetadatafilter: 'Artist|LicenseShortName|LicenseUrl|Credit',
+        titles: part.join('|')
+      });
+      const pages = (r.query && r.query.pages) || {};
+      Object.values(pages).forEach(pg => {
+        if (pg.missing !== undefined || !pg.imageinfo || !pg.imageinfo[0]) return;
+        const ii = pg.imageinfo[0];
+        const md = ii.extmetadata || {};
+        const lic = plain(md.LicenseShortName && md.LicenseShortName.value) || 'רישיון חופשי';
+        const rec = {
+          src: ii.thumburl || ii.url,
+          full: ii.url,
+          page: ii.descriptionurl,
+          author: plain((md.Artist && md.Artist.value) || (md.Credit && md.Credit.value)) || 'ויקישיתוף',
+          lic,
+          file: pg.title
+        };
+        (need[pg.title] || []).forEach(k => out[k] = rec);
+      });
+    }
+  } catch (e) {
+    /* אופליין או חסימת רשת — נשארים עם האיורים */
+  }
+
+  M.map = out; M.done = true;
+  if (Object.keys(out).length) mCacheWrite(out);
+  M.waiters.splice(0).forEach(fn => { try { fn(); } catch (e) {} });
+  return out;
+}
+
+/* HTML של מסגרת מדיה: איור עכשיו, תמונה אמיתית כשהיא נפתרת */
+function media(key, fallbackHTML, o) {
+  o = o || {};
+  const m = MEDIA[key];
+  if (!m) return fallbackHTML || '';
+  return `<div class="phwrap media noimg${o.contain ? ' contain' : ''}${key.startsWith('map-') ? ' is-map' : ''}" data-media="${key}">
+    <div class="fb">${fallbackHTML || ''}</div></div>`;
+}
+
+/* מילוי מסגרות שכבר נפתרו */
+function hydrateMedia(root) {
+  (root || document).querySelectorAll('[data-media]').forEach(el => {
+    if (el.dataset.filled) return;
+    const rec = M.map[el.dataset.media];
+    if (!rec) return;
+    el.dataset.filled = '1';
+    const cap = (MEDIA[el.dataset.media] && MEDIA[el.dataset.media].cap) || '';
+    const img = document.createElement('img');
+    img.loading = 'lazy'; img.decoding = 'async'; img.alt = cap;
+    img.className = 'zoomable';
+    img.onload = () => {
+      el.classList.remove('noimg');
+      if (!el.closest('.avatar, .nx-thumb, .ev-vis')) {
+        const c = document.createElement('a');
+        c.className = 'mcredit';
+        c.href = rec.page; c.target = '_blank'; c.rel = 'noopener nofollow';
+        c.innerHTML = `<span class="mc-i">${IC.cam}</span><span>${esc(rec.author)} · ${esc(rec.lic)} · Wikimedia Commons</span>`;
+        c.onclick = ev => ev.stopPropagation();
+        el.appendChild(c);
+      }
+      img.onclick = ev => { ev.stopPropagation(); openLightbox(rec.full, cap + ' — ' + rec.author + ' · ' + rec.lic); };
+    };
+    img.onerror = () => { img.remove(); el.dataset.filled = ''; };
+    img.src = rec.src;
+    el.insertBefore(img, el.firstChild);
+  });
+}
+
+/* רשימת קרדיטים — נבנית מהמדיה שנפתרה בפועל */
+function creditsHTML(keys) {
+  const seen = new Set(), rows = [];
+  keys.forEach(k => {
+    const r = M.map[k];
+    if (!r || seen.has(r.file)) return;
+    seen.add(r.file);
+    rows.push(`<a class="crow" href="${r.page}" target="_blank" rel="noopener nofollow">
+      <span class="cr-t">${esc((MEDIA[k] && MEDIA[k].cap) || r.file.replace(/^File:/, ''))}</span>
+      <span class="cr-m">${esc(r.author)} · ${esc(r.lic)}</span></a>`);
+  });
+  if (!rows.length) return '';
+  return `<div class="block rv"><div class="block-h"><span class="ico">${IC.cam}</span><h3>קרדיטים לתמונות</h3></div>
+    <div class="credits">${rows.join('')}</div>
+    <div class="note">כל התמונות שמוצגות בתיק הזה מגיעות מ־<b>ויקישיתוף</b> ומפורסמות ברישיון חופשי או בנחלת הכלל. לחיצה על שורה פותחת את דף הקובץ המקורי עם פרטי הרישיון המלאים.</div>
+  </div>`;
+}
+
 /* ---------- BRAND ---------- */
 const BRAND = {
   site: 'https://retzach.dubelteam.com/',
@@ -156,7 +331,8 @@ function renderChips() {
   $('#chips').innerHTML = `<button class="chip ${filterS === 'all' ? 'on' : ''}" data-s="all">הכל</button>` +
     seasons.map(s => `<button class="chip ${filterS == s ? 'on' : ''}" data-s="${s}">עונה ${s}</button>`).join('') +
     `<button class="chip ${filterS === 'ready' ? 'on' : ''}" data-s="ready">תיקים פתוחים</button>`;
-  $$('#chips .chip').forEach(c => c.onclick = () => { filterS = c.dataset.s; renderChips(); renderCases(); });
+  $$('#chips .chip').forEach(c => c.onclick = () => { filterS = c.dataset.s; renderChips(); renderCases();
+loadMedia().then(() => { hydrateMedia(document); }); });
 }
 
 function renderCases() {
@@ -277,6 +453,10 @@ function openKiller(id, skipHistory) {
       <div class="block rv">
         <div class="quote"><p>${esc(k.quotes[5].t)}</p><div class="by">— <b>${esc(k.quotes[5].by)}</b> · ${esc(k.quotes[5].role)}</div></div>
       </div>
+      ${k.gallery && k.gallery.length ? `<div class="block rv"><div class="block-h"><span class="ico">${IC.cam}</span><h3>המקומות שבתיק</h3></div>
+        <div class="gal">${k.gallery.map(mk => `<figure class="gtile">${media(mk, `<div style="width:64px;height:64px;opacity:.35">${ART.portrait}</div>`, { contain: mk.startsWith('map-') })}<figcaption>${esc((MEDIA[mk] || {}).cap || '')}</figcaption></figure>`).join('')}</div>
+        <div class="note">תמונות אמיתיות מוויקישיתוף, ברישיון חופשי. הן מראות את <b>המקומות</b> שבהם התיק התרחש — לא את המעורבים.</div>
+      </div>` : ''}
       <div class="note"><b>הערה על דיוק.</b> כל עובדה בעמוד הזה מגובה במקורות המופיעים בלשונית "מקורות". במקרים שבהם מקורות שונים חלוקים (למשל מספר ההצתות המדויק) — מוצגים שני הנתונים.</div>
     </div>
 
@@ -319,6 +499,7 @@ function openKiller(id, skipHistory) {
             </div>
             <div class="vbody"><div class="vbody-in">
               ${v.photos && v.photos.length ? `<div class="${v.photos.length > 1 ? 'vshots' : ''}">${v.photos.map(pk => `<div class="vphoto">${photo(pk, `<div style="width:78px;height:78px;opacity:.55">${ART.portrait}</div>`)}<span class="cap">${esc(v.name)}</span></div>`).join('')}</div>` : ''}
+              ${v.media && v.media.length ? `<div class="mstrip">${v.media.map(mk => `<figure class="mtile">${media(mk, `<div style="width:56px;height:56px;opacity:.4">${ART.portrait}</div>`, { contain: mk.startsWith('map-') })}<figcaption>${esc((MEDIA[mk] || {}).cap || '')}</figcaption></figure>`).join('')}</div>` : ''}
               <div class="vtags">
                 <span class="vtag">${esc(v.date)}</span>
                 <span class="vtag">${esc(v.county)}</span>
@@ -337,7 +518,9 @@ function openKiller(id, skipHistory) {
       <div class="block rv"><div class="block-h"><span class="ico">${IC.cam}</span><h3>קלסר הראיות</h3></div>
         <div class="evgrid">${k.evidence.map((e, i) => `
           <button class="ev ${e.wide ? 'wide' : ''}" data-ev="${i}">
-            <div class="ev-vis"><span class="ev-stamp">${esc(e.s)}</span>${e.img ? photo(e.img, ART[e.art] || ART.letter, { contain: e.contain }) : (ART[e.art] || ART.letter)}</div>
+            <div class="ev-vis"><span class="ev-stamp">${esc(e.s)}</span>${e.img
+              ? photo(e.img, ART[e.art] || ART.letter, { contain: e.contain })
+              : (e.media ? media(e.media, ART[e.art] || ART.letter, { contain: String(e.media).startsWith('map-') }) : (ART[e.art] || ART.letter))}</div>
             <div class="ev-txt"><h5>${esc(e.t)}</h5><p>${esc(e.p)}</p></div>
           </button>`).join('')}</div>
         <div class="note"><b>תמונות אמיתיות.</b> האיורים כאן הם המחשות סגנוניות שנוצרו לאפליקציה. הקלסתרון המקורי, תמונות הקורבנות והאיור של מרי קרסין זמינים דרך הקישורים בלשונית "מקורות".</div>
@@ -379,6 +562,7 @@ function openKiller(id, skipHistory) {
             <div class="lt"><h5>${esc(l.t)}</h5><p>${esc(l.d)}</p></div>
             <div class="go">${IC.ext}</div>
           </a>`).join('')}</div>
+        <div id="credits-slot"></div>
         <div class="note">הארכיון הזה הוא פרויקט מחווה של מאזינים. הוא אינו מסונף לפודקאסט רצח ואינו מחליף אותו — <b>הוא נועד לתת מקום אחד לכל מה שדובר בפרק</b>. התוכן המקורי, המחקר והעריכה שייכים למאיה גזית ושי מגל.</div>
       </div>
     </div>
@@ -450,19 +634,37 @@ function openKiller(id, skipHistory) {
   }
 
   observe($('#v-killer'));
+
+  // media: fill what is already resolved, and re-fill when resolution finishes
+  const paintMedia = () => {
+    hydrateMedia($('#v-killer'));
+    const slot = $('#credits-slot');
+    if (slot && !slot.dataset.done) {
+      const keys = [...new Set([...(k.gallery || []),
+        ...(k.victims || []).flatMap(v => v.media || []),
+        ...(k.evidence || []).map(e => e.media).filter(Boolean)])];
+      const html = creditsHTML(keys);
+      if (html) { slot.innerHTML = html; slot.dataset.done = '1'; observe(slot); }
+    }
+  };
+  paintMedia();
+  if (!M.done) M.waiters.push(paintMedia); else setTimeout(paintMedia, 0);
 }
 
 /* ---------- SHEET ---------- */
 function openSheet(e) {
   $('#sheet-body').innerHTML = `
     <div class="grab"></div>
-    <div class="big-vis">${e.img ? photo(e.img, ART[e.art] || ART.letter, { contain: true }) : (ART[e.art] || ART.letter)}<span class="ev-stamp" style="top:12px;inset-inline-start:12px">${esc(e.s)}</span></div>
+    <div class="big-vis">${e.img
+      ? photo(e.img, ART[e.art] || ART.letter, { contain: true })
+      : (e.media ? media(e.media, ART[e.art] || ART.letter, { contain: true }) : (ART[e.art] || ART.letter))}<span class="ev-stamp" style="top:12px;inset-inline-start:12px">${esc(e.s)}</span></div>
     <h4>${esc(e.t)}</h4>
     <div class="sub">${esc(e.p)}</div>
     <div class="prose">${e.b}</div>
     <div style="height:8px"></div>`;
   $('#sheet').classList.add('on');
   document.body.style.overflow = 'hidden';
+  hydrateMedia($('#sheet-body'));
 }
 function closeSheet() { $('#sheet').classList.remove('on'); document.body.style.overflow = ''; }
 
@@ -489,6 +691,7 @@ if (heroArt) {
   if (featured) heroArt.innerHTML = scene(DB[featured.id].scene, 'המחשה · יצירה מקורית');
 }
 renderChips(); renderCases();
+loadMedia().then(() => { hydrateMedia(document); });
 $('#q').oninput = ev => { query = ev.target.value.trim(); renderCases(); };
 $('#back').onclick = goHome;
 $('#about-btn').onclick = openAbout;

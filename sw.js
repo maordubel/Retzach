@@ -1,5 +1,5 @@
 /* רצח · הארכיון — service worker | Dubel Team */
-const V = 'retzach-v4';
+const V = 'retzach-v5';
 const CORE = [
   '/', '/index.html',
   '/assets/style.css', '/assets/data.js', '/assets/app.js',
