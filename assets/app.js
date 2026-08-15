@@ -13,7 +13,26 @@ const IC = {
   tv:'<svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="13" rx="2"/><path d="M8 3l4 3 4-3"/></svg>',
   doc:'<svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h8l6 6v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>',
   play:'<svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg>',
+  mic:'<svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/></svg>',
+  star:'<svg viewBox="0 0 24 24"><path d="M12 4l2.3 4.7 5.2.8-3.8 3.6.9 5.1L12 15.8 7.4 18.2l.9-5.1L4.5 9.5l5.2-.8z"/></svg>',
+  eyeoff:'<svg viewBox="0 0 24 24"><path d="M10.6 6.2A9 9 0 0 1 12 6c5 0 9 6 9 6a15 15 0 0 1-2.8 3.3M6.6 6.8A15 15 0 0 0 3 12s4 6 9 6a9 9 0 0 0 3.8-.8"/><path d="M3 3l18 18"/></svg>',
+  gift:'<svg viewBox="0 0 24 24"><path d="M4 11h16v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/><path d="M3 7h18v4H3zM12 7v14"/><path d="M12 7S10.5 3 8.5 3.5 8 7 12 7zM12 7s1.5-4 3.5-3.5S16 7 12 7z"/></svg>',
+  brush:'<svg viewBox="0 0 24 24"><path d="M15 4l5 5-9 9H6v-5z"/><path d="M13 6l5 5M5 20h5"/></svg>',
+  check:'<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg>',
+  cal:'<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+  x:'<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>',
   fb:'<svg viewBox="0 0 24 24"><path d="M14 8h3V4h-3a4 4 0 0 0-4 4v2H8v4h2v6h4v-6h3l1-4h-4V9a1 1 0 0 1 1-1z"/></svg>'
+};
+
+const HN = {
+  verdict:['הכרעה', 'star'],
+  promise:['הובטח בפרק', 'check'],
+  skip:   ['הושמט במכוון', 'eyeoff'],
+  rec:    ['המלצה של מאיה', 'play'],
+  art:    ['תיעוד ויזואלי', 'brush'],
+  bts:    ['מאחורי הקלעים', 'mic'],
+  live:   ['לייבים', 'cal'],
+  fun:    ['סתם, כי כן', 'gift']
 };
 
 const COST = {
@@ -64,6 +83,26 @@ async function share(title, url) {
     await navigator.clipboard.writeText(url);
     toast('הקישור הועתק');
   } catch (e) { /* user cancelled */ }
+}
+
+function openLightbox(src, cap) {
+  const lb = $('#lightbox');
+  lb.innerHTML = `<button class="lb-x" aria-label="סגירה">${IC.x}</button>
+    <img src="${src}" alt="${esc(cap || '')}">
+    ${cap ? `<div class="lb-cap">${esc(cap)}</div>` : ''}`;
+  lb.classList.add('on');
+  document.body.style.overflow = 'hidden';
+  lb.onclick = closeLightbox;
+}
+function closeLightbox() {
+  $('#lightbox').classList.remove('on');
+  if (!$('#sheet').classList.contains('on')) document.body.style.overflow = '';
+}
+
+function scene(key, cap) {
+  const svg = (typeof SCENE !== 'undefined' && SCENE[key]) || '';
+  if (!svg) return '';
+  return `<div class="sceneframe">${svg}${cap ? `<span class="scene-cap">${esc(cap)}</span>` : ''}</div>`;
 }
 
 function openAbout() {
@@ -132,7 +171,9 @@ function renderCases() {
   if (!list.length) { box.innerHTML = `<div class="empty">לא נמצא תיק תואם.</div>`; return; }
   box.innerHTML = list.map(e => `
     <div class="case ${e.ready ? 'ready' : 'soon'}" ${e.ready ? `data-go="${e.id}"` : ''}>
-      <div class="avatar">${e.img ? photo(e.img, `<span class="init">${esc(e.name.trim()[0])}</span>`) : `<span class="init">${esc(e.name.trim()[0])}</span>`}</div>
+      <div class="avatar${e.ready ? ' wide' : ''}">${e.img
+        ? photo(e.img, (e.id && DB[e.id] && scene(DB[e.id].scene)) || `<span class="init">${esc(e.name.trim()[0])}</span>`)
+        : `<span class="init">${esc(e.name.trim()[0])}</span>`}</div>
       <div class="case-body">
         <h3>${esc(e.name)}</h3>
         <div class="case-meta">
@@ -175,6 +216,18 @@ function ohioMap(vics) {
   <div class="vlegend">${vics.map(v => `<button data-lv="${v.n}"><span class="n">${v.n}</span>${esc(v.name)}</button>`).join('')}</div>`;
 }
 
+function nextCase(currentId) {
+  const ready = EPISODES.filter(e => e.ready && e.id);
+  if (ready.length < 2) return '';
+  const i = ready.findIndex(e => e.id === currentId);
+  const n = ready[(i + 1) % ready.length];
+  return `<button class="nextcase rv" data-next="${n.id}">
+    <div class="nx-thumb">${scene(DB[n.id] && DB[n.id].scene) || ''}</div>
+    <div class="nx-t"><span>התיק הבא בארכיון</span><h4>${esc(n.name)}</h4></div>
+    <div class="nx-go">${IC.arrow}</div>
+  </button>`;
+}
+
 function openKiller(id, skipHistory) {
   const k = DB[id]; if (!k) return;
   $('#tb-k-title').textContent = k.name;
@@ -182,12 +235,14 @@ function openKiller(id, skipHistory) {
   if (!skipHistory) history.pushState({ id }, '', '?case=' + id);
 
   const html = `
+  <div class="kwrap">
+  <div class="kaside">
   <div class="khero">
     <div class="khero-bg"></div>
     <div class="mug">
       <div class="scan"></div>
       <span class="corner c1"></span><span class="corner c2"></span><span class="corner c3"></span><span class="corner c4"></span>
-      ${photo(k.heroKey, `<div style="width:150px;height:150px">${ART[k.heroArt] || ART.sketch}</div>`)}
+      ${photo(k.heroKey, scene(k.scene, 'המחשה · יצירה מקורית') || `<div style="width:150px;height:150px">${ART[k.heroArt] || ART.sketch}</div>`)}
       <div class="caselabel">${esc(k.caseLabel || 'CASE FILE')}</div>
     </div>
     <h1 class="kname">${esc(k.name)}</h1>
@@ -195,9 +250,12 @@ function openKiller(id, skipHistory) {
     <p class="kline">${k.line}</p>
     <div class="stats">${k.stats.map(s => `<div class="stat"><div class="n" data-n="${s.n}">0</div><div class="l">${esc(s.l)}</div></div>`).join('')}</div>
   </div>
+  </div>
 
+  <div class="kmain">
   <div class="tabs" id="tabs">
     <button class="tab on" data-p="file">התיק</button>
+    ${k.host ? '<button class="tab" data-p="host">מהפרק</button>' : ''}
     <button class="tab" data-p="vic">הקורבנות</button>
     <button class="tab" data-p="ev">ראיות</button>
     <button class="tab" data-p="tl">ציר זמן</button>
@@ -221,6 +279,28 @@ function openKiller(id, skipHistory) {
       </div>
       <div class="note"><b>הערה על דיוק.</b> כל עובדה בעמוד הזה מגובה במקורות המופיעים בלשונית "מקורות". במקרים שבהם מקורות שונים חלוקים (למשל מספר ההצתות המדויק) — מוצגים שני הנתונים.</div>
     </div>
+
+    <!-- HOST NOTES -->
+    ${k.host ? `<div class="panel" id="p-host">
+      <div class="block rv"><div class="block-h"><span class="ico">${IC.mic}</span><h3>מהפרק · הערות מאיה</h3></div>
+        <div class="host-intro">${k.host.intro}</div>
+        <div class="hostgrid">
+        ${k.host.items.map(n => {
+          const meta = HN[n.k] || HN.bts;
+          return `<div class="hn k-${n.k} rv">
+            <div class="hn-h">
+              <span class="hn-ico">${IC[meta[1]] || IC.mic}</span>
+              <h4>${esc(n.t)}</h4>
+            </div>
+            <p class="hn-d">${n.d}</p>
+            ${n.q ? `<div class="hn-q"><p>“${esc(n.q)}”</p><span>— מאיה גזית</span></div>` : ''}
+            ${n.link ? `<a class="hn-link" href="${n.link.u}" target="_blank" rel="noopener">${esc(n.link.t)} ${IC.ext}</a>` : ''}
+          </div>`;
+        }).join('')}
+        </div>
+        <div class="hn-src">מבוסס על הפוסט של מאיה בקבוצת הפייסבוק של הפודקאסט.<br>הציטוטים מובאים כלשונם, לצורכי תיעוד ומחווה.</div>
+      </div>
+    </div>` : ''}
 
     <!-- VICTIMS -->
     <div class="panel" id="p-vic">
@@ -303,6 +383,9 @@ function openKiller(id, skipHistory) {
       </div>
     </div>
 
+    ${nextCase(k.id)}
+  </div>
+  </div>
   </div>`;
 
   $('#k-content').innerHTML = html;
@@ -341,6 +424,16 @@ function openKiller(id, skipHistory) {
 
   // evidence sheet
   $$('#v-killer .ev').forEach(b => b.onclick = () => openSheet(k.evidence[+b.dataset.ev]));
+
+  // next case
+  const nc = $('#v-killer .nextcase');
+  if (nc) nc.onclick = () => openKiller(nc.dataset.next);
+
+  // lightbox on any real photo
+  $$('#v-killer .phwrap img').forEach(im => {
+    im.classList.add('zoomable');
+    im.onclick = ev => { ev.stopPropagation(); openLightbox(im.src, im.closest('.vphoto') ? im.closest('.vphoto').querySelector('.cap')?.textContent : ''); };
+  });
 
   // player
   const pl = $('#player');
@@ -390,6 +483,11 @@ function goHome() {
 }
 
 /* ---------- INIT ---------- */
+const heroArt = $('#hero-art');
+if (heroArt) {
+  const featured = EPISODES.find(e => e.ready && e.id && DB[e.id] && DB[e.id].scene);
+  if (featured) heroArt.innerHTML = scene(DB[featured.id].scene, 'המחשה · יצירה מקורית');
+}
 renderChips(); renderCases();
 $('#q').oninput = ev => { query = ev.target.value.trim(); renderCases(); };
 $('#back').onclick = goHome;
@@ -417,10 +515,25 @@ addEventListener('scroll', () => {
   $$('.topbar').forEach(t => t.classList.toggle('solid', y > 70));
   const pl = $('#player');
   if (pl.classList.contains('on') && !pl.classList.contains('open')) pl.classList.toggle('hide', y > lastY && y > 220);
+  const h = document.documentElement.scrollHeight - innerHeight;
+  $('#prog').style.width = (h > 40 ? Math.min(100, (y / h) * 100) : 0) + '%';
   lastY = y;
 }, { passive: true });
 
-addEventListener('keydown', e => { if (e.key === 'Escape') { if ($('#sheet').classList.contains('on')) closeSheet(); else if ($('#v-killer').classList.contains('on')) goHome(); } });
+// tab switching with arrows on desktop
+addEventListener('keydown', e => {
+  if (!$('#v-killer').classList.contains('on')) return;
+  if ($('#sheet').classList.contains('on') || $('#lightbox').classList.contains('on')) return;
+  if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+  const tabs = $$('#tabs .tab'); if (!tabs.length) return;
+  const i = tabs.findIndex(t => t.classList.contains('on'));
+  const dir = e.key === 'ArrowLeft' ? 1 : -1;   // RTL
+  const n = tabs[(i + dir + tabs.length) % tabs.length];
+  if (n) { n.click(); n.scrollIntoView({ block: 'nearest', inline: 'center' }); }
+});
+
+addEventListener('keydown', e => { if (e.key === 'Escape') {
+    if ($('#lightbox').classList.contains('on')) { closeLightbox(); return; } if ($('#sheet').classList.contains('on')) closeSheet(); else if ($('#v-killer').classList.contains('on')) goHome(); } });
 
 // deep link ?case=dillon
 const qp = new URLSearchParams(location.search).get('case');
