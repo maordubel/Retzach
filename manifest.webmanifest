@@ -1,0 +1,21 @@
+{
+  "name": "רצח · הארכיון",
+  "short_name": "רצח",
+  "description": "ארכיון המאזינים של פודקאסט רצח — ראיות, קורבנות, צירי זמן ומקורות.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "dir": "rtl",
+  "lang": "he",
+  "background_color": "#0a0908",
+  "theme_color": "#0a0908",
+  "categories": ["books", "education", "entertainment"],
+  "icons": [
+    { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

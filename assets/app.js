@@ -1,0 +1,436 @@
+/* ---------- ICONS ---------- */
+const IC = {
+  chev:'<svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>',
+  arrow:'<svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>',
+  ext:'<svg viewBox="0 0 24 24"><path d="M9 6l-6 6 6 6"/></svg>',
+  file:'<svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>',
+  users:'<svg viewBox="0 0 24 24"><path d="M17 20v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9.5" cy="7" r="4"/><path d="M22 20v-2a4 4 0 0 0-3-3.9"/></svg>',
+  cam:'<svg viewBox="0 0 24 24"><path d="M3 8a2 2 0 0 1 2-2h2l1.5-2h7L17 6h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="4"/></svg>',
+  clock:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+  link:'<svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>',
+  yt:'<svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="4"/><path d="M10 9.5l5 2.5-5 2.5z"/></svg>',
+  sp:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M7.5 9.5c3-1 7-.7 9.5.8M8 13c2.4-.8 5.5-.5 7.5.8M8.6 16c1.9-.6 4.2-.4 5.8.6"/></svg>',
+  tv:'<svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="13" rx="2"/><path d="M8 3l4 3 4-3"/></svg>',
+  doc:'<svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h8l6 6v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>',
+  play:'<svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg>',
+  fb:'<svg viewBox="0 0 24 24"><path d="M14 8h3V4h-3a4 4 0 0 0-4 4v2H8v4h2v6h4v-6h3l1-4h-4V9a1 1 0 0 1 1-1z"/></svg>'
+};
+
+const COST = {
+  free: ['חינם', 'free'],
+  ads:  ['חינם עם פרסומות', 'ads'],
+  paid: ['בתשלום', 'paid'],
+  info: ['דף מידע', '']
+};
+
+/* ---------- HELPERS ---------- */
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+let io = null;
+function observe(root) {
+  if (!io) io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: .12, rootMargin: '0px 0px -6% 0px' });
+  root.querySelectorAll('.rv:not(.in),.case:not(.in),.tli:not(.in)').forEach(el => io.observe(el));
+}
+
+function countUp(el, target) {
+  const dur = 1100, t0 = performance.now();
+  const step = t => {
+    const p = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - p, 3);
+    el.textContent = Math.round(target * e).toLocaleString('he-IL');
+    if (p < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+
+/* ---------- BRAND ---------- */
+const BRAND = {
+  site: 'https://retzach.dubelteam.com/',
+  by:   'Dubel Team',
+  url:  'https://www.dubelteam.com/?utm_source=retzach&utm_medium=app&utm_campaign=archive'
+};
+
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.classList.add('on');
+  clearTimeout(toast._id); toast._id = setTimeout(() => t.classList.remove('on'), 2200);
+}
+
+async function share(title, url) {
+  const data = { title, text: 'רצח · הארכיון — כל מה שדובר עליו בפרק', url };
+  try {
+    if (navigator.share) { await navigator.share(data); return; }
+    await navigator.clipboard.writeText(url);
+    toast('הקישור הועתק');
+  } catch (e) { /* user cancelled */ }
+}
+
+function openAbout() {
+  $('#sheet-body').innerHTML = `
+    <div class="grab"></div>
+    <div class="ab-hero">
+      <div class="mark">רצח</div>
+      <p>ארכיון המאזינים של <b>פודקאסט רצח</b>. לכל פרק — תיק אחד שמרכז את הראיות, הקורבנות, ציר הזמן, הסרטים הדוקומנטריים והמקורות שדובר עליהם.</p>
+    </div>
+
+    <div class="ab-block">
+      <h5>מה זה</h5>
+      <p>פרויקט מחווה עצמאי, לא מסחרי. הוא <b>אינו מסונף לפודקאסט</b> ואינו מחליף אותו — הוא נועד לתת מקום אחד לכל מה שמאזין רוצה לראות אחרי שהוא מסיים פרק.</p>
+      <p>התוכן המקורי, המחקר והעריכה שייכים ל<b>מאיה גזית ושי מגל</b>.</p>
+    </div>
+
+    <div class="ab-block">
+      <h5>איך נבנה תיק</h5>
+      <p>כל עובדה מוצלבת מול מקורות ראשוניים או תקשורת מוכרת, ומופיעה עם קישור בלשונית "מקורות". כשמקורות חלוקים — מוצגים שני הנתונים. טענות שלא הוכחו בבית משפט מסומנות ככאלה.</p>
+      <p>תיק נפתח רק אחרי שהוא מתועד במלואו. עד אז הוא מסומן <b>"בקרוב"</b>.</p>
+    </div>
+
+    <div class="ab-block">
+      <h5>מי בנה</h5>
+      <p><b>DUBEL TEAM</b> — חברת אופרייטורס בהובלת מייסד, מבסיס באתונה. בונים ומריצים מוצרים, מותגים ותפעול — מאסטרטגיה ועד הדבר שעובד בפועל.</p>
+      <div class="ab-tags"><span>Brand &amp; Strategy</span><span>Operations</span><span>Events &amp; Production</span><span>Digital Products</span><span>Greece Market Entry</span></div>
+      <a class="ab-cta" href="${BRAND.url}" target="_blank" rel="noopener">
+        <div class="t"><h6>DUBELTEAM.COM</h6><p>Built by the brief. An operator.</p></div>
+        <div class="go"><svg viewBox="0 0 24 24"><path d="M9 6l-6 6 6 6"/></svg></div>
+      </a>
+    </div>
+
+    <div class="ab-block">
+      <h5>יש הערה או תיקון?</h5>
+      <p>דיוק הוא כל העניין כאן. אם משהו לא מדויק — כתבו, וזה יתוקן.</p>
+      <a class="ab-cta" href="https://www.dubelteam.com/contact.html?utm_source=retzach&utm_medium=app&utm_campaign=feedback" target="_blank" rel="noopener">
+        <div class="t"><h6>שליחת הערה</h6><p>dubelteam.com/contact</p></div>
+        <div class="go"><svg viewBox="0 0 24 24"><path d="M9 6l-6 6 6 6"/></svg></div>
+      </a>
+    </div>
+    <div style="height:10px"></div>`;
+  $('#sheet').classList.add('on');
+  document.body.style.overflow = 'hidden';
+}
+
+/* ---------- HOME ---------- */
+let filterS = 'all', query = '';
+
+function renderChips() {
+  const seasons = [...new Set(EPISODES.map(e => e.s))].sort((a, b) => b - a);
+  $('#chips').innerHTML = `<button class="chip ${filterS === 'all' ? 'on' : ''}" data-s="all">הכל</button>` +
+    seasons.map(s => `<button class="chip ${filterS == s ? 'on' : ''}" data-s="${s}">עונה ${s}</button>`).join('') +
+    `<button class="chip ${filterS === 'ready' ? 'on' : ''}" data-s="ready">תיקים פתוחים</button>`;
+  $$('#chips .chip').forEach(c => c.onclick = () => { filterS = c.dataset.s; renderChips(); renderCases(); });
+}
+
+function renderCases() {
+  const list = EPISODES.filter(e => {
+    if (filterS === 'ready' && !e.ready) return false;
+    if (filterS !== 'all' && filterS !== 'ready' && e.s != filterS) return false;
+    if (query && !(e.name + ' עונה ' + e.s + ' פרק ' + e.e + ' ' + (e.tag || '')).includes(query)) return false;
+    return true;
+  });
+  $('#count').textContent = `${list.length} מתוך ${EPISODES.length}`;
+  const box = $('#cases');
+  if (!list.length) { box.innerHTML = `<div class="empty">לא נמצא תיק תואם.</div>`; return; }
+  box.innerHTML = list.map(e => `
+    <div class="case ${e.ready ? 'ready' : 'soon'}" ${e.ready ? `data-go="${e.id}"` : ''}>
+      <div class="avatar">${e.img ? photo(e.img, `<span class="init">${esc(e.name.trim()[0])}</span>`) : `<span class="init">${esc(e.name.trim()[0])}</span>`}</div>
+      <div class="case-body">
+        <h3>${esc(e.name)}</h3>
+        <div class="case-meta">
+          <span>עונה ${e.s} · פרק ${e.e}</span><i class="dot"></i><span>${e.date}</span>
+          ${e.dur ? `<i class="dot"></i><span>${e.dur}</span>` : ''}
+        </div>
+        <div style="margin-top:7px;display:flex;gap:5px;flex-wrap:wrap">
+          ${e.ready ? `<span class="badge">תיק פתוח</span>` : `<span class="badge n">בקרוב</span>`}
+          ${e.tag ? `<span class="badge g">${esc(e.tag)}</span>` : ''}
+        </div>
+      </div>
+      <div class="arrow">${IC.arrow}</div>
+    </div>`).join('');
+  $$('.case[data-go]').forEach(c => c.onclick = () => openKiller(c.dataset.go));
+  observe(box);
+}
+
+/* ---------- KILLER PAGE ---------- */
+function ohioMap(vics) {
+  const pins = vics.map(v => `
+    <g class="pin" data-v="${v.n}">
+      <circle class="halo" cx="${v.x}" cy="${v.y}" r="3">
+        <animate attributeName="r" values="3;9;3" dur="2.8s" begin="${v.n * .38}s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values=".8;0;.8" dur="2.8s" begin="${v.n * .38}s" repeatCount="indefinite"/>
+      </circle>
+      <circle class="core" cx="${v.x}" cy="${v.y}" r="3.4"/>
+      <text x="${v.x}" y="${v.y + 1.5}" text-anchor="middle" style="font-size:4px;fill:#fff;font-weight:900">${v.n}</text>
+    </g>`).join('');
+  const land = 'M18 27 L41 25 Q54 20 66 25 Q79 29 89 35 L89 62 Q86 69 80 72 Q75 76 72 82 Q64 87 55 88 Q47 92 40 90 Q31 85 25 78 Q21 74 18 73 Z';
+  return `<svg id="ohio" viewBox="0 0 100 100">
+    <defs><linearGradient id="lg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#241d15"/><stop offset="1" stop-color="#171208"/></linearGradient></defs>
+    <path class="land" d="${land}" fill="url(#lg)"/>
+    <path d="M41 25 Q54 20 66 25 Q79 29 89 35" fill="none" stroke="#2f5f7d" stroke-width="1.6" opacity=".8"/>
+    <path d="M43 21 Q56 16 68 20 Q78 24 86 29" fill="none" stroke="#2f5f7d" stroke-width=".6" opacity=".3"/>
+    <text x="60" y="15" text-anchor="middle" style="font-size:3.4px;fill:#4a7d9c;font-family:Heebo;letter-spacing:.3px">אגם אירי</text>
+    <text x="36" y="56" text-anchor="middle" style="font-size:6px;fill:#332b22;font-family:'Frank Ruhl Libre';font-weight:900;letter-spacing:1px">OHIO</text>
+    ${pins}
+  </svg>
+  <div class="vlegend">${vics.map(v => `<button data-lv="${v.n}"><span class="n">${v.n}</span>${esc(v.name)}</button>`).join('')}</div>`;
+}
+
+function openKiller(id, skipHistory) {
+  const k = DB[id]; if (!k) return;
+  $('#tb-k-title').textContent = k.name;
+  document.title = k.name + ' · רצח · הארכיון';
+  if (!skipHistory) history.pushState({ id }, '', '?case=' + id);
+
+  const html = `
+  <div class="khero">
+    <div class="khero-bg"></div>
+    <div class="mug">
+      <div class="scan"></div>
+      <span class="corner c1"></span><span class="corner c2"></span><span class="corner c3"></span><span class="corner c4"></span>
+      ${photo(k.heroKey, `<div style="width:150px;height:150px">${ART[k.heroArt] || ART.sketch}</div>`)}
+      <div class="caselabel">${esc(k.caseLabel || 'CASE FILE')}</div>
+    </div>
+    <h1 class="kname">${esc(k.name)}</h1>
+    <div><span class="kalias">${esc(k.alias)}</span></div>
+    <p class="kline">${k.line}</p>
+    <div class="stats">${k.stats.map(s => `<div class="stat"><div class="n" data-n="${s.n}">0</div><div class="l">${esc(s.l)}</div></div>`).join('')}</div>
+  </div>
+
+  <div class="tabs" id="tabs">
+    <button class="tab on" data-p="file">התיק</button>
+    <button class="tab" data-p="vic">הקורבנות</button>
+    <button class="tab" data-p="ev">ראיות</button>
+    <button class="tab" data-p="tl">ציר זמן</button>
+    <button class="tab" data-p="src">מקורות</button>
+  </div>
+
+  <div class="pad">
+
+    <!-- FILE -->
+    <div class="panel on" id="p-file">
+      <div class="block rv"><div class="block-h"><span class="ico">${IC.file}</span><h3>גיליון תיק</h3></div>
+        <div class="card"><div class="facts">${k.facts.map(f => `<div class="fact"><div class="k">${esc(f[0])}</div><div class="v">${f[1]}</div></div>`).join('')}</div></div>
+      </div>
+      ${k.story.map((s, i) => `
+      <div class="block rv"><div class="block-h"><span class="ico">${IC.file}</span><h3>${esc(s.h)}</h3></div>
+        <div class="card"><div class="prose"><p>${s.t}</p></div></div>
+        ${k.quotes[i] ? `<div class="quote rv"><p>${esc(k.quotes[i].t)}</p><div class="by">— <b>${esc(k.quotes[i].by)}</b> · ${esc(k.quotes[i].role)}</div></div>` : ''}
+      </div>`).join('')}
+      <div class="block rv">
+        <div class="quote"><p>${esc(k.quotes[5].t)}</p><div class="by">— <b>${esc(k.quotes[5].by)}</b> · ${esc(k.quotes[5].role)}</div></div>
+      </div>
+      <div class="note"><b>הערה על דיוק.</b> כל עובדה בעמוד הזה מגובה במקורות המופיעים בלשונית "מקורות". במקרים שבהם מקורות שונים חלוקים (למשל מספר ההצתות המדויק) — מוצגים שני הנתונים.</div>
+    </div>
+
+    <!-- VICTIMS -->
+    <div class="panel" id="p-vic">
+      ${k.map === 'ohio' ? `<div class="block rv"><div class="block-h"><span class="ico">${IC.users}</span><h3>מפת הזירות</h3></div>
+        <div class="mapwrap"><span class="lbl">EAST-CENTRAL OHIO</span>${ohioMap(k.victims)}
+          <div style="font-size:11px;color:var(--muted2);text-align:center;padding:4px 6px 2px;font-weight:300">לחצו על נקודה כדי לפתוח את התיק של הקורבן · המפה סכמטית</div>
+        </div>
+      </div>` : ''}
+      <div class="block rv"><div class="block-h"><span class="ico">${IC.users}</span><h3>${k.victims.length === 5 ? 'חמשת הקורבנות' : k.victims.length === 2 ? 'שתי הקורבנות' : 'הקורבנות'}</h3></div>
+        <div class="vgrid">${k.victims.map(v => `
+          <div class="victim" id="vic-${v.n}">
+            <div class="vhead">
+              <div class="vnum">${v.n}</div>
+              <div class="t"><h4>${esc(v.name)}</h4><div class="m">${v.f ? 'בת' : 'בן'} ${v.age} · ${esc(v.from)}</div></div>
+              <div class="vchev">${IC.chev}</div>
+            </div>
+            <div class="vbody"><div class="vbody-in">
+              ${v.photos && v.photos.length ? `<div class="${v.photos.length > 1 ? 'vshots' : ''}">${v.photos.map(pk => `<div class="vphoto">${photo(pk, `<div style="width:78px;height:78px;opacity:.55">${ART.portrait}</div>`)}<span class="cap">${esc(v.name)}</span></div>`).join('')}</div>` : ''}
+              <div class="vtags">
+                <span class="vtag">${esc(v.date)}</span>
+                <span class="vtag">${esc(v.county)}</span>
+                <span class="vtag">${esc(v.act)}</span>
+              </div>
+              <div class="prose" style="font-size:14px"><p>${v.d}</p></div>
+              <div class="vtags" style="margin-top:12px;margin-bottom:0">${v.tags.map(t => `<span class="vtag" style="border-color:rgba(193,18,31,.3);color:#ff9c9c">${esc(t)}</span>`).join('')}</div>
+              <div style="font-size:10.5px;color:var(--muted2);margin-top:10px;letter-spacing:.05em">${esc(v.en)}</div>
+            </div></div>
+          </div>`).join('')}</div>
+      </div>
+    </div>
+
+    <!-- EVIDENCE -->
+    <div class="panel" id="p-ev">
+      <div class="block rv"><div class="block-h"><span class="ico">${IC.cam}</span><h3>קלסר הראיות</h3></div>
+        <div class="evgrid">${k.evidence.map((e, i) => `
+          <button class="ev ${e.wide ? 'wide' : ''}" data-ev="${i}">
+            <div class="ev-vis"><span class="ev-stamp">${esc(e.s)}</span>${e.img ? photo(e.img, ART[e.art] || ART.letter, { contain: e.contain }) : (ART[e.art] || ART.letter)}</div>
+            <div class="ev-txt"><h5>${esc(e.t)}</h5><p>${esc(e.p)}</p></div>
+          </button>`).join('')}</div>
+        <div class="note"><b>תמונות אמיתיות.</b> האיורים כאן הם המחשות סגנוניות שנוצרו לאפליקציה. הקלסתרון המקורי, תמונות הקורבנות והאיור של מרי קרסין זמינים דרך הקישורים בלשונית "מקורות".</div>
+      </div>
+    </div>
+
+    <!-- TIMELINE -->
+    <div class="panel" id="p-tl">
+      <div class="block rv"><div class="block-h"><span class="ico">${IC.clock}</span><h3>ציר זמן · 1950–2023</h3></div>
+        <div class="tl">${k.timeline.map(t => `
+          <div class="tli ${t.kill ? 'kill' : ''}">
+            <div class="yr">${esc(t.y)}</div>
+            <div class="tt">${esc(t.t)}</div>
+            <div class="td">${esc(t.d)}</div>
+          </div>`).join('')}</div>
+      </div>
+    </div>
+
+    <!-- SOURCES -->
+    <div class="panel" id="p-src">
+      ${k.watch && k.watch.length ? `<div class="block rv"><div class="block-h"><span class="ico">${IC.cam}</span><h3>סרטים ודוקו</h3></div>
+        <div class="watch">${k.watch.map(w => `
+          <a class="wcard" href="${w.u}" target="_blank" rel="noopener">
+            <div class="wthumb ${w.i === 'doc' ? 'doc' : w.i === 'pod' ? 'pod' : ''}">${w.i === 'yt' ? IC.play : w.i === 'pod' ? IC.sp : IC.doc}</div>
+            <div class="wbody">
+              <h5>${esc(w.t)}</h5><p>${esc(w.d)}</p>
+              <div class="wtags">
+                <span class="wtag ${COST[w.cost] ? COST[w.cost][1] : ''}">${COST[w.cost] ? COST[w.cost][0] : 'לא ידוע'}</span>
+                ${w.note ? `<span class="wtag">${esc(w.note)}</span>` : ''}
+              </div>
+            </div>
+          </a>`).join('')}</div>
+        ${k.watchNote ? `<div class="note">${k.watchNote}</div>` : ''}
+      </div>` : ''}
+      <div class="block rv"><div class="block-h"><span class="ico">${IC.link}</span><h3>מקורות לקריאה</h3></div>
+        <div class="links">${k.links.map(l => `
+          <a class="lnk" href="${l.u}" target="_blank" rel="noopener">
+            <div class="li ${l.i === 'yt' ? 'yt' : l.i === 'sp' ? 'sp' : ''}">${IC[l.i] || IC.doc}</div>
+            <div class="lt"><h5>${esc(l.t)}</h5><p>${esc(l.d)}</p></div>
+            <div class="go">${IC.ext}</div>
+          </a>`).join('')}</div>
+        <div class="note">הארכיון הזה הוא פרויקט מחווה של מאזינים. הוא אינו מסונף לפודקאסט רצח ואינו מחליף אותו — <b>הוא נועד לתת מקום אחד לכל מה שדובר בפרק</b>. התוכן המקורי, המחקר והעריכה שייכים למאיה גזית ושי מגל.</div>
+      </div>
+    </div>
+
+  </div>`;
+
+  $('#k-content').innerHTML = html;
+  showView('#v-killer');
+
+  // stats
+  $$('#v-killer .stat .n').forEach(el => countUp(el, +el.dataset.n));
+
+  // tabs
+  $$('#tabs .tab').forEach(t => t.onclick = () => {
+    $$('#tabs .tab').forEach(x => x.classList.remove('on')); t.classList.add('on');
+    $$('#v-killer .panel').forEach(p => p.classList.remove('on'));
+    const p = $('#p-' + t.dataset.p); p.classList.add('on');
+    observe(p);
+    window.scrollTo({ top: $('#tabs').offsetTop - 60, behavior: 'smooth' });
+  });
+
+  // victims accordion
+  $$('#v-killer .victim').forEach(v => {
+    v.querySelector('.vhead').onclick = () => {
+      const b = v.querySelector('.vbody'), open = v.classList.contains('open');
+      $$('#v-killer .victim').forEach(o => { o.classList.remove('open'); o.querySelector('.vbody').style.maxHeight = 0; });
+      if (!open) { v.classList.add('open'); b.style.maxHeight = b.scrollHeight + 'px'; }
+    };
+  });
+
+  // map pins + legend
+  const jump = n => {
+    const v = $('#vic-' + n);
+    if (!v.classList.contains('open')) v.querySelector('.vhead').click();
+    v.classList.add('hl'); setTimeout(() => v.classList.remove('hl'), 1300);
+    setTimeout(() => v.scrollIntoView({ behavior: 'smooth', block: 'center' }), 60);
+  };
+  $$('#ohio .pin').forEach(p => p.onclick = () => jump(p.dataset.v));
+  $$('.vlegend button').forEach(b => b.onclick = () => jump(b.dataset.lv));
+
+  // evidence sheet
+  $$('#v-killer .ev').forEach(b => b.onclick = () => openSheet(k.evidence[+b.dataset.ev]));
+
+  // player
+  const pl = $('#player');
+  pl.classList.add('on'); pl.classList.remove('open');
+  $('#pl-title').textContent = 'תכירו: ' + k.short;
+  $('#pl-sub').textContent = k.ep + ' · ' + k.epDate;
+  const btn = $('#pl-toggle');
+  if (k.spotify) {
+    $('#pl-frame').dataset.src = `https://open.spotify.com/embed/episode/${k.spotify}?utm_source=generator&theme=0`;
+    btn.dataset.url = ''; btn.textContent = 'האזן לפרק';
+  } else {
+    $('#pl-frame').dataset.src = ''; $('#pl-frame').src = '';
+    btn.dataset.url = k.epUrl || ''; btn.textContent = 'פתח בספוטיפיי';
+  }
+
+  observe($('#v-killer'));
+}
+
+/* ---------- SHEET ---------- */
+function openSheet(e) {
+  $('#sheet-body').innerHTML = `
+    <div class="grab"></div>
+    <div class="big-vis">${e.img ? photo(e.img, ART[e.art] || ART.letter, { contain: true }) : (ART[e.art] || ART.letter)}<span class="ev-stamp" style="top:12px;inset-inline-start:12px">${esc(e.s)}</span></div>
+    <h4>${esc(e.t)}</h4>
+    <div class="sub">${esc(e.p)}</div>
+    <div class="prose">${e.b}</div>
+    <div style="height:8px"></div>`;
+  $('#sheet').classList.add('on');
+  document.body.style.overflow = 'hidden';
+}
+function closeSheet() { $('#sheet').classList.remove('on'); document.body.style.overflow = ''; }
+
+/* ---------- NAV ---------- */
+function showView(sel) {
+  $$('.view').forEach(v => v.classList.remove('on', 'back'));
+  $(sel).classList.add('on');
+  window.scrollTo(0, 0);
+}
+function goHome() {
+  $$('.view').forEach(v => v.classList.remove('on', 'back'));
+  const h = $('#v-home'); h.classList.add('on', 'back');
+  $('#player').classList.remove('on', 'open');
+  $('#pl-frame').src = '';
+  document.title = 'רצח · הארכיון — כל מה שדובר עליו בפרק';
+  window.scrollTo(0, 0);
+  if (location.search) history.pushState({}, '', location.pathname);
+}
+
+/* ---------- INIT ---------- */
+renderChips(); renderCases();
+$('#q').oninput = ev => { query = ev.target.value.trim(); renderCases(); };
+$('#back').onclick = goHome;
+$('#about-btn').onclick = openAbout;
+$('#share-btn').onclick = () => share('רצח · הארכיון', BRAND.site);
+$('#share-k').onclick = () => {
+  const id = new URLSearchParams(location.search).get('case');
+  share(document.title, BRAND.site + (id ? '?case=' + id : ''));
+};
+addEventListener('popstate', e => {
+  const id = (e.state && e.state.id) || new URLSearchParams(location.search).get('case');
+  if (id && DB[id]) openKiller(id, true); else goHome();
+});
+$('#sheet .scrim').onclick = closeSheet;
+$('#pl-toggle').onclick = () => {
+  const pl = $('#player'), f = $('#pl-frame');
+  if ($('#pl-toggle').dataset.url) { window.open($('#pl-toggle').dataset.url, '_blank', 'noopener'); return; }
+  if (!pl.classList.contains('open')) { if (!f.src) f.src = f.dataset.src; pl.classList.add('open'); $('#pl-toggle').textContent = 'סגור'; }
+  else { pl.classList.remove('open'); $('#pl-toggle').textContent = 'האזן לפרק'; }
+};
+
+let lastY = 0;
+addEventListener('scroll', () => {
+  const y = scrollY;
+  $$('.topbar').forEach(t => t.classList.toggle('solid', y > 70));
+  const pl = $('#player');
+  if (pl.classList.contains('on') && !pl.classList.contains('open')) pl.classList.toggle('hide', y > lastY && y > 220);
+  lastY = y;
+}, { passive: true });
+
+addEventListener('keydown', e => { if (e.key === 'Escape') { if ($('#sheet').classList.contains('on')) closeSheet(); else if ($('#v-killer').classList.contains('on')) goHome(); } });
+
+// deep link ?case=dillon
+const qp = new URLSearchParams(location.search).get('case');
+if (qp && DB[qp]) openKiller(qp, true);
+observe(document);
+
+
+/* ---------- signature ---------- */
+console.log(
+  '%c רצח · הארכיון %c Built by Dubel Team — dubelteam.com ',
+  'background:#c1121f;color:#fff;font-weight:700;padding:4px 8px;border-radius:4px 0 0 4px',
+  'background:#17140f;color:#ded5c8;padding:4px 8px;border-radius:0 4px 4px 0'
+);

@@ -1,0 +1,1345 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+<meta name="theme-color" content="#0a0908">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>רצח · הארכיון</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500&display=swap" rel="stylesheet">
+<style>
+/* ============ TOKENS ============ */
+:root{
+  --bg:#0a0908;
+  --bg2:#100e0c;
+  --surface:#17140f;
+  --surface2:#1f1a15;
+  --line:#2b241d;
+  --line2:#3a3128;
+  --red:#c1121f;
+  --red-hot:#e8232f;
+  --blood:#7a0b12;
+  --bone:#ded5c8;
+  --text:#f4efe8;
+  --muted:#9c9184;
+  --muted2:#6e655a;
+  --amber:#c9a227;
+  --r:16px;
+  --nav:64px;
+  --ease:cubic-bezier(.22,.9,.25,1);
+  --sat:env(safe-area-inset-top,0px);
+  --sab:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+html{background:var(--bg)}
+body{
+  font-family:'Rubik',system-ui,-apple-system,sans-serif;
+  font-optical-sizing:auto;font-variant-numeric:lining-nums tabular-nums;
+  background:var(--bg);color:var(--text);
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+  min-height:100dvh;
+}
+h1,h2,h3,h4,h5,.disp{font-family:'Rubik',system-ui,sans-serif;font-weight:800;letter-spacing:-.02em;margin:0}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;border:0;background:none;color:inherit;cursor:pointer;padding:0}
+::selection{background:var(--red);color:#fff}
+
+/* ============ ATMOSPHERE ============ */
+#grain{position:fixed;inset:-50%;z-index:9999;pointer-events:none;opacity:.055;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation:grainShift 7s steps(6) infinite}
+@keyframes grainShift{0%{transform:translate(0,0)}20%{transform:translate(-3%,2%)}40%{transform:translate(2%,-3%)}60%{transform:translate(-2%,-2%)}80%{transform:translate(3%,1%)}100%{transform:translate(0,0)}}
+#vignette{position:fixed;inset:0;z-index:9998;pointer-events:none;
+  background:radial-gradient(115% 85% at 50% 30%,transparent 40%,rgba(0,0,0,.62) 100%)}
+
+/* ============ APP SHELL ============ */
+#app{position:relative;min-height:100dvh;max-width:520px;margin:0 auto;
+  background:linear-gradient(180deg,#0d0b09 0%,var(--bg) 45%);
+  box-shadow:0 0 90px rgba(0,0,0,.9);overflow:hidden}
+.view{display:none;animation:viewIn .42s var(--ease) both}
+.view.on{display:block}
+@keyframes viewIn{from{opacity:0;transform:translateX(-22px)}to{opacity:1;transform:none}}
+.view.back{animation:viewBack .42s var(--ease) both}
+@keyframes viewBack{from{opacity:0;transform:translateX(22px)}to{opacity:1;transform:none}}
+.pad{padding:0 18px}
+.spacer{height:calc(120px + var(--sab))}
+
+/* ============ TOP BAR ============ */
+.topbar{position:sticky;top:0;z-index:60;padding:calc(var(--sat) + 10px) 14px 10px;
+  display:flex;align-items:center;gap:12px;
+  background:linear-gradient(180deg,rgba(10,9,8,.96),rgba(10,9,8,.72) 70%,transparent);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  transition:background .3s}
+.topbar.solid{background:rgba(10,9,8,.94);border-bottom:1px solid var(--line)}
+.iconbtn{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;
+  background:rgba(255,255,255,.05);border:1px solid var(--line);transition:.2s var(--ease);flex:none}
+.iconbtn:active{transform:scale(.9);background:rgba(193,18,31,.2)}
+.iconbtn svg{width:18px;height:18px;stroke:var(--bone);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.topbar .tb-title{font-family:'Rubik',sans-serif;font-weight:800;font-size:16px;opacity:0;transform:translateY(6px);transition:.3s var(--ease);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar.solid .tb-title{opacity:1;transform:none}
+
+/* ============ HOME HERO ============ */
+.hero{position:relative;padding:26px 18px 26px;overflow:hidden}
+.hero:before{content:'';position:absolute;inset:0;
+  background:
+   radial-gradient(70% 50% at 78% 10%,rgba(193,18,31,.18),transparent 65%),
+   repeating-linear-gradient(90deg,transparent 0 3px,rgba(255,255,255,.014) 3px 4px);
+  pointer-events:none}
+.brandmark{display:flex;align-items:flex-end;gap:10px;position:relative}
+.stencil{font-family:'Rubik',sans-serif;font-weight:900;font-size:72px;line-height:.9;
+  letter-spacing:-.05em;color:var(--text);position:relative;padding-bottom:6px;
+  text-shadow:0 2px 0 #000,0 0 50px rgba(193,18,31,.3)}
+.stencil:after{content:'';position:absolute;left:0;right:0;bottom:-2px;height:5px;
+  background:linear-gradient(90deg,var(--red),var(--blood) 70%,transparent);border-radius:3px}
+.drip{position:absolute;left:2px;bottom:-22px;width:26px;height:34px}
+.drip path{fill:var(--red)}
+.drip .d2{animation:drip 4.6s var(--ease) infinite}
+@keyframes drip{0%,60%{transform:translateY(0);opacity:0}72%{opacity:1}100%{transform:translateY(16px);opacity:0}}
+.kicker{font-size:11px;letter-spacing:.42em;color:var(--red-hot);font-weight:700;margin-bottom:14px;
+  display:flex;align-items:center;gap:8px}
+.kicker:after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--red),transparent)}
+.hero-sub{margin-top:16px;color:var(--muted);font-size:14.5px;line-height:1.7;max-width:33ch;font-weight:300}
+.hero-sub b{color:var(--bone);font-weight:500}
+.tape{display:inline-block;margin-top:16px;background:var(--red);color:#fff;font-size:10.5px;font-weight:900;
+  letter-spacing:.22em;padding:5px 14px;transform:rotate(-1.4deg);box-shadow:0 4px 16px rgba(193,18,31,.35)}
+
+/* ============ SEARCH + CHIPS ============ */
+.search{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);
+  border-radius:14px;padding:0 14px;height:46px;margin:20px 0 14px;transition:.25s var(--ease)}
+.search:focus-within{border-color:var(--red);box-shadow:0 0 0 4px rgba(193,18,31,.12)}
+.search svg{width:17px;height:17px;stroke:var(--muted2);stroke-width:2;fill:none;flex:none}
+.search input{flex:1;background:none;border:0;outline:0;color:var(--text);font-family:inherit;font-size:15px}
+.search input::placeholder{color:var(--muted2)}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 18px 4px;margin:0 -18px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;padding:8px 16px;border-radius:999px;background:var(--surface);border:1px solid var(--line);
+  font-size:13px;font-weight:500;color:var(--muted);transition:.22s var(--ease);white-space:nowrap}
+.chip.on{background:var(--red);border-color:var(--red);color:#fff;font-weight:700;box-shadow:0 4px 18px rgba(193,18,31,.34)}
+.chip:active{transform:scale(.94)}
+
+/* ============ CASE CARDS ============ */
+.sec-head{display:flex;align-items:baseline;gap:10px;margin:26px 0 14px}
+.sec-head h2{font-size:19px}
+.sec-head span{font-size:11px;color:var(--muted2);letter-spacing:.14em;font-weight:600}
+.cases{display:flex;flex-direction:column;gap:12px}
+.case{position:relative;display:flex;gap:14px;align-items:center;background:var(--surface);
+  border:1px solid var(--line);border-radius:var(--r);padding:14px;overflow:hidden;
+  transition:.28s var(--ease);opacity:0;transform:translateY(16px)}
+.case.in{opacity:1;transform:none}
+.case:before{content:'';position:absolute;inset-inline-start:0;top:0;bottom:0;width:3px;
+  background:linear-gradient(180deg,var(--red),var(--blood));opacity:.9}
+.case.ready:active{transform:scale(.975);border-color:var(--red)}
+.case.soon{opacity:.5}
+.case.soon.in{opacity:.55}
+.avatar{width:58px;height:58px;flex:none;border-radius:12px;position:relative;overflow:hidden;
+  background:linear-gradient(140deg,#241d17,#100d0a);border:1px solid var(--line2);display:grid;place-items:center}
+.avatar .init{font-family:'Rubik',sans-serif;font-weight:900;font-size:22px;color:#4d4238}
+.avatar:after{content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(0,0,0,.32) 3px 4px)}
+.case-body{flex:1;min-width:0}
+.case-body h3{font-size:16.5px;margin-bottom:3px;line-height:1.25}
+.case-meta{font-size:11.5px;color:var(--muted2);display:flex;gap:7px;align-items:center;flex-wrap:wrap;font-weight:400}
+.dot{width:3px;height:3px;border-radius:50%;background:var(--muted2);flex:none}
+.badge{font-size:9.5px;font-weight:900;letter-spacing:.1em;padding:3px 7px;border-radius:5px;
+  background:rgba(193,18,31,.16);color:#ff6b6b;border:1px solid rgba(193,18,31,.3)}
+.badge.g{background:rgba(201,162,39,.12);color:var(--amber);border-color:rgba(201,162,39,.28)}
+.badge.n{background:rgba(255,255,255,.05);color:var(--muted2);border-color:var(--line2)}
+.case .arrow{width:26px;height:26px;flex:none;display:grid;place-items:center;color:var(--muted2)}
+.case.ready .arrow{color:var(--red-hot)}
+.case .arrow svg{width:15px;height:15px;stroke:currentColor;stroke-width:2.4;fill:none;stroke-linecap:round;stroke-linejoin:round}
+
+/* ============ KILLER HERO ============ */
+.khero{position:relative;padding:8px 18px 0;overflow:hidden}
+.khero-bg{position:absolute;inset:-40% -20% auto -20%;height:120%;pointer-events:none;
+  background:radial-gradient(60% 55% at 50% 22%,rgba(193,18,31,.24),transparent 70%)}
+.mug{position:relative;height:210px;border-radius:18px;overflow:hidden;border:1px solid var(--line2);
+  background:linear-gradient(160deg,#1c1712,#0b0908);display:grid;place-items:center}
+.mug:after{content:'';position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent 0 2px,rgba(0,0,0,.28) 2px 3px)}
+.mug .scan{position:absolute;left:0;right:0;height:70px;pointer-events:none;
+  background:linear-gradient(180deg,transparent,rgba(232,35,47,.08),transparent);animation:scan 5.5s linear infinite}
+@keyframes scan{0%{top:-70px}100%{top:100%}}
+.corner{position:absolute;width:22px;height:22px;border:2px solid var(--red);opacity:.85}
+.c1{top:10px;left:10px;border-right:0;border-bottom:0}
+.c2{top:10px;right:10px;border-left:0;border-bottom:0}
+.c3{bottom:10px;left:10px;border-right:0;border-top:0}
+.c4{bottom:10px;right:10px;border-left:0;border-top:0}
+.mug .caselabel{position:absolute;bottom:12px;inset-inline-start:38px;font-size:9.5px;letter-spacing:.24em;
+  color:var(--muted2);font-weight:700}
+.kname{font-size:38px;line-height:1.02;margin-top:20px;letter-spacing:-.025em}
+.kalias{display:inline-block;margin-top:10px;font-size:12px;font-weight:700;letter-spacing:.16em;
+  color:#ff7a7a;background:rgba(193,18,31,.13);border:1px solid rgba(193,18,31,.3);padding:5px 12px;border-radius:6px}
+.kline{font-size:14px;color:var(--muted);margin-top:12px;line-height:1.7;font-weight:300}
+
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:20px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:13px 8px;text-align:center;position:relative;overflow:hidden}
+.stat:before{content:'';position:absolute;top:0;left:20%;right:20%;height:1px;background:linear-gradient(90deg,transparent,var(--red),transparent)}
+.stat .n{font-family:'Rubik',sans-serif;font-weight:900;font-size:26px;color:var(--text);line-height:1}
+.stat .l{font-size:10px;color:var(--muted2);margin-top:6px;letter-spacing:.06em;font-weight:500}
+
+/* ============ TABS ============ */
+.tabs{position:sticky;top:calc(var(--sat) + 56px);z-index:50;display:flex;gap:4px;padding:9px 18px;margin:22px -18px 0;
+  background:rgba(10,9,8,.93);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:none;padding:8px 14px;border-radius:10px;font-size:13.5px;font-weight:600;color:var(--muted2);
+  transition:.22s var(--ease);white-space:nowrap;position:relative}
+.tab.on{color:#fff;background:rgba(193,18,31,.16)}
+.tab.on:after{content:'';position:absolute;bottom:2px;left:14px;right:14px;height:2px;background:var(--red);border-radius:2px}
+.panel{display:none;animation:fadeUp .38s var(--ease) both}
+.panel.on{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+/* ============ REVEAL ============ */
+.rv{opacity:0;transform:translateY(20px);transition:opacity .6s var(--ease),transform .6s var(--ease)}
+.rv.in{opacity:1;transform:none}
+
+/* ============ BLOCKS ============ */
+.block{margin-top:24px}
+.block-h{display:flex;align-items:center;gap:9px;margin-bottom:13px}
+.block-h .ico{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;flex:none;
+  background:rgba(193,18,31,.14);border:1px solid rgba(193,18,31,.26)}
+.block-h .ico svg{width:14px;height:14px;stroke:var(--red-hot);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.block-h h3{font-size:17px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.prose{font-size:14.8px;line-height:1.85;color:#cfc6ba;font-weight:300}
+.prose p{margin:0 0 13px}
+.prose p:last-child{margin:0}
+.prose b,.prose strong{color:var(--text);font-weight:600}
+.prose em{color:var(--amber);font-style:normal;font-weight:500}
+
+.facts{display:flex;flex-direction:column;gap:0}
+.fact{display:flex;gap:12px;padding:11px 0;border-bottom:1px dashed var(--line)}
+.fact:last-child{border:0;padding-bottom:0}
+.fact .k{width:92px;flex:none;font-size:12px;color:var(--muted2);font-weight:600;padding-top:1px}
+.fact .v{font-size:14px;color:var(--text);font-weight:400;line-height:1.55}
+
+/* quote */
+.quote{position:relative;background:linear-gradient(150deg,#1c1510,#120f0c);border:1px solid var(--line2);
+  border-radius:var(--r);padding:22px 20px 18px;margin-top:14px;overflow:hidden}
+.quote:before{content:'”';position:absolute;top:-16px;inset-inline-start:12px;font-family:'Rubik',sans-serif;
+  font-size:82px;color:var(--red);opacity:.28;line-height:1}
+.quote p{font-family:'Rubik',sans-serif;font-size:17.5px;line-height:1.6;color:var(--bone);margin:0;font-weight:400}
+.quote .by{margin-top:12px;font-size:11.5px;color:var(--muted2);letter-spacing:.06em;font-family:'Rubik';font-weight:500}
+.quote .by b{color:#ff8080;font-weight:700}
+
+/* ============ VICTIMS ============ */
+.vgrid{display:flex;flex-direction:column;gap:11px}
+.victim{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;transition:.3s var(--ease)}
+.victim.open{border-color:rgba(193,18,31,.5);box-shadow:0 10px 34px rgba(0,0,0,.5)}
+.victim.hl{border-color:var(--red);animation:pulseCard 1.2s var(--ease)}
+@keyframes pulseCard{0%,100%{box-shadow:0 0 0 0 rgba(193,18,31,0)}40%{box-shadow:0 0 0 6px rgba(193,18,31,.18)}}
+.vhead{display:flex;gap:13px;align-items:center;padding:14px}
+.vnum{width:34px;height:34px;flex:none;border-radius:10px;display:grid;place-items:center;
+  background:rgba(193,18,31,.12);border:1px solid rgba(193,18,31,.3);
+  font-family:'Rubik',sans-serif;font-weight:900;font-size:14px;color:#ff7a7a}
+.vhead .t{flex:1;min-width:0}
+.vhead h4{font-family:'Rubik',sans-serif;font-size:16px;font-weight:800;margin:0 0 2px}
+.vhead .m{font-size:11.5px;color:var(--muted2)}
+.vchev{width:20px;height:20px;flex:none;transition:.3s var(--ease);color:var(--muted2)}
+.victim.open .vchev{transform:rotate(180deg);color:var(--red-hot)}
+.vchev svg{width:100%;height:100%;stroke:currentColor;stroke-width:2.4;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.vbody{max-height:0;overflow:hidden;transition:max-height .45s var(--ease)}
+.vbody-in{padding:0 14px 16px;border-top:1px dashed var(--line);margin-top:0;padding-top:14px}
+.vtags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.vtag{font-size:10.5px;padding:4px 9px;border-radius:6px;background:rgba(255,255,255,.045);
+  border:1px solid var(--line2);color:var(--muted);font-weight:500}
+
+/* map */
+.mapwrap{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 10px 10px;position:relative}
+.mapwrap .lbl{position:absolute;top:12px;inset-inline-end:14px;font-size:9.5px;letter-spacing:.2em;color:var(--muted2);font-weight:700}
+#ohio{width:100%;height:auto;display:block;max-height:270px}
+#ohio .land{fill:#1d1811;stroke:var(--line2);stroke-width:1.1}
+#ohio .pin{cursor:pointer}
+#ohio .pin circle.core{fill:var(--red-hot);stroke:#fff;stroke-width:.7}
+#ohio .pin circle.halo{fill:none;stroke:var(--red);stroke-width:.9;opacity:.6;transform-origin:center;transform-box:fill-box}
+#ohio .pin text{fill:var(--bone);font-size:3.6px;font-family:'Rubik';font-weight:700}
+@keyframes ping{0%{r:2.6;opacity:.7}100%{r:8;opacity:0}}
+
+/* ============ TIMELINE ============ */
+.tl{position:relative;padding-inline-start:26px;margin-top:6px}
+.tl:before{content:'';position:absolute;inset-inline-start:7px;top:6px;bottom:6px;width:2px;
+  background:linear-gradient(180deg,var(--red) 0%,var(--blood) 60%,var(--line) 100%);opacity:.55}
+.tli{position:relative;padding:0 0 20px}
+.tli:before{content:'';position:absolute;inset-inline-start:-24px;top:6px;width:11px;height:11px;border-radius:50%;
+  background:var(--bg);border:2px solid var(--muted2);transition:.4s var(--ease)}
+.tli.in:before{border-color:var(--red);box-shadow:0 0 0 4px rgba(193,18,31,.15)}
+.tli.kill:before{background:var(--red);border-color:var(--red-hot);box-shadow:0 0 12px rgba(232,35,47,.7)}
+.tli .yr{font-family:'Rubik',sans-serif;font-weight:900;font-size:13px;color:var(--red-hot);letter-spacing:.04em}
+.tli .tt{font-size:14.5px;font-weight:600;margin-top:3px;color:var(--text);line-height:1.45}
+.tli .td{font-size:13px;color:var(--muted);margin-top:5px;line-height:1.65;font-weight:300}
+.tli.kill .tt{color:#ffb3b3}
+
+/* ============ EVIDENCE ============ */
+.evgrid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.ev{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;
+  transition:.26s var(--ease);position:relative;text-align:start}
+.ev:active{transform:scale(.965);border-color:var(--red)}
+.ev.wide{grid-column:1/-1}
+.ev-vis{position:relative;height:112px;background:linear-gradient(150deg,#221b14,#0d0b09);
+  display:grid;place-items:center;overflow:hidden;border-bottom:1px solid var(--line)}
+.ev.wide .ev-vis{height:150px}
+.ev-vis:after{content:'';position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent 0 2px,rgba(0,0,0,.25) 2px 3px)}
+.ev-vis svg.art{width:92px;height:92px;display:block}
+.ev.wide .ev-vis svg.art{width:124px;height:124px}
+.ev-stamp{position:absolute;top:8px;inset-inline-start:8px;font-size:8.5px;font-weight:900;letter-spacing:.14em;
+  color:#ff8080;border:1px solid rgba(193,18,31,.5);padding:2px 6px;border-radius:4px;
+  background:rgba(10,9,8,.6);transform:rotate(-2deg);z-index:2}
+.ev-txt{padding:11px 12px 13px}
+.ev-txt h5{font-family:'Rubik',sans-serif;font-size:14px;font-weight:800;margin:0 0 4px;line-height:1.3}
+.ev-txt p{font-size:11.5px;color:var(--muted2);margin:0;line-height:1.5;font-weight:300}
+
+/* sheet */
+#sheet{position:fixed;inset:0;z-index:200;display:none}
+#sheet.on{display:block}
+#sheet .scrim{position:absolute;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(4px);
+  animation:fade .3s ease both}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+#sheet .panel-s{position:absolute;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:520px;
+  max-height:88dvh;overflow-y:auto;background:var(--bg2);border-top:1px solid var(--line2);
+  border-radius:22px 22px 0 0;padding:0 18px calc(28px + var(--sab));animation:sheetUp .42s var(--ease) both;
+  box-shadow:0 -20px 60px rgba(0,0,0,.7)}
+@keyframes sheetUp{from{transform:translate(-50%,100%)}to{transform:translate(-50%,0)}}
+.grab{width:40px;height:4px;border-radius:4px;background:var(--line2);margin:10px auto 16px}
+#sheet h4{font-family:'Rubik',sans-serif;font-size:22px;font-weight:800;margin:0 0 6px}
+#sheet .sub{font-size:11.5px;color:var(--red-hot);letter-spacing:.16em;font-weight:700;margin-bottom:16px}
+#sheet .big-vis{height:190px;border-radius:14px;background:linear-gradient(150deg,#221b14,#0d0b09);
+  border:1px solid var(--line2);display:grid;place-items:center;margin-bottom:18px;position:relative;overflow:hidden}
+#sheet .big-vis svg.art{width:152px;height:152px;display:block}
+.vlegend{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;padding:12px 6px 4px}
+.vlegend button{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.045);
+  border:1px solid var(--line2);border-radius:999px;padding:5px 11px 5px 7px;font-size:11.5px;color:var(--muted);
+  font-weight:500;transition:.2s var(--ease)}
+.vlegend button:active{transform:scale(.94);border-color:var(--red);color:#fff}
+.vlegend .n{width:16px;height:16px;border-radius:50%;background:var(--red);color:#fff;font-size:9.5px;
+  font-weight:900;display:grid;place-items:center;flex:none}
+#sheet .big-vis:after{content:'';position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent 0 2px,rgba(0,0,0,.25) 2px 3px)}
+
+
+/* ============ PHOTOS ============ */
+.phwrap{position:relative;width:100%;height:100%;display:grid;place-items:center;overflow:hidden}
+.phwrap img{width:100%;height:100%;object-fit:cover;display:block;filter:saturate(.82) contrast(1.06)}
+.phwrap .fb{display:none}
+.phwrap.noimg img{display:none}
+.phwrap.noimg .fb{display:grid;place-items:center;width:100%;height:100%}
+.phwrap.contain img{object-fit:contain;background:#0d0b09}
+.vphoto{width:100%;height:172px;border-radius:12px;overflow:hidden;border:1px solid var(--line2);
+  margin-bottom:13px;position:relative;background:#100d0a}
+.vphoto:after{content:'';position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,transparent 55%,rgba(0,0,0,.55));}
+.vphoto .cap{position:absolute;bottom:7px;inset-inline-start:10px;font-size:10px;color:#cfc6ba;z-index:2;
+  letter-spacing:.05em;text-shadow:0 1px 4px #000}
+.vshots{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:13px}
+.vshots .vphoto{margin:0;height:150px}
+
+/* ============ WATCH ============ */
+.watch{display:flex;flex-direction:column;gap:10px}
+.wcard{display:flex;gap:12px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);
+  border-radius:14px;padding:13px;transition:.24s var(--ease)}
+.wcard:active{transform:scale(.98);border-color:var(--red)}
+.wthumb{width:64px;height:46px;flex:none;border-radius:9px;background:linear-gradient(150deg,#241d16,#0d0b09);
+  border:1px solid var(--line2);display:grid;place-items:center;position:relative;overflow:hidden}
+.wthumb svg{width:20px;height:20px;stroke:none;fill:#ff4d4d}
+.wthumb.doc svg{fill:none;stroke:#c9a227;stroke-width:1.9}
+.wthumb.pod svg{fill:none;stroke:#1ed760;stroke-width:1.9}
+.wbody{flex:1;min-width:0}
+.wbody h5{font-size:14px;font-weight:700;margin:0 0 3px;line-height:1.35}
+.wbody p{font-size:11.5px;color:var(--muted2);margin:0;line-height:1.5;font-weight:300}
+.wtags{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}
+.wtag{font-size:9.5px;font-weight:800;letter-spacing:.06em;padding:3px 8px;border-radius:5px;
+  background:rgba(255,255,255,.05);border:1px solid var(--line2);color:var(--muted)}
+.wtag.free{background:rgba(46,160,67,.14);border-color:rgba(46,160,67,.38);color:#5ddc7a}
+.wtag.ads{background:rgba(201,162,39,.13);border-color:rgba(201,162,39,.34);color:var(--amber)}
+.wtag.paid{background:rgba(193,18,31,.13);border-color:rgba(193,18,31,.34);color:#ff8080}
+
+/* ============ LINKS ============ */
+.links{display:flex;flex-direction:column;gap:9px}
+.lnk{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);
+  border-radius:13px;padding:13px 14px;transition:.24s var(--ease)}
+.lnk:active{transform:scale(.98);border-color:var(--red)}
+.lnk .li{width:32px;height:32px;flex:none;border-radius:9px;display:grid;place-items:center;
+  background:rgba(255,255,255,.05);border:1px solid var(--line2)}
+.lnk .li svg{width:15px;height:15px;stroke:var(--bone);stroke-width:1.9;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.lnk .li.yt{background:rgba(255,0,0,.13);border-color:rgba(255,0,0,.3)}
+.lnk .li.yt svg{stroke:#ff4d4d}
+.lnk .li.sp{background:rgba(30,215,96,.12);border-color:rgba(30,215,96,.3)}
+.lnk .li.sp svg{stroke:#1ed760}
+.lnk .lt{flex:1;min-width:0}
+.lnk .lt h5{font-size:14px;font-weight:600;margin:0 0 2px}
+.lnk .lt p{font-size:11.5px;color:var(--muted2);margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:300}
+.lnk .go{color:var(--muted2);width:16px;height:16px;flex:none}
+.lnk .go svg{width:100%;height:100%;stroke:currentColor;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+
+/* ============ PLAYER ============ */
+#player{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;z-index:120;
+  background:rgba(13,11,9,.97);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  border-top:1px solid var(--line2);padding:0 14px calc(10px + var(--sab));
+  transition:transform .4s var(--ease);display:none}
+#player.on{display:block}
+#player.hide{transform:translate(-50%,110%)}
+.pl-bar{display:flex;align-items:center;gap:11px;padding:11px 0 0}
+.pl-art{width:38px;height:38px;border-radius:9px;flex:none;background:linear-gradient(140deg,var(--blood),#150f0c);
+  display:grid;place-items:center;border:1px solid var(--line2)}
+.pl-art span{font-family:'Rubik',sans-serif;font-weight:900;font-size:17px;color:#fff;opacity:.85}
+.pl-t{flex:1;min-width:0}
+.pl-t h5{font-size:13px;font-weight:600;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pl-t p{font-size:10.5px;color:var(--muted2);margin:1px 0 0;font-weight:300}
+.pl-btn{padding:8px 15px;border-radius:999px;background:var(--red);color:#fff;font-size:12px;font-weight:800;
+  letter-spacing:.03em;flex:none;transition:.2s var(--ease);box-shadow:0 4px 16px rgba(193,18,31,.35)}
+.pl-btn:active{transform:scale(.92)}
+.pl-embed{max-height:0;overflow:hidden;transition:max-height .45s var(--ease)}
+#player.open .pl-embed{max-height:190px}
+.pl-embed iframe{width:100%;height:152px;border:0;border-radius:12px;margin-top:11px}
+
+/* ============ MISC ============ */
+.note{font-size:11.5px;color:var(--muted2);line-height:1.7;margin-top:14px;padding:12px 13px;
+  background:rgba(255,255,255,.028);border:1px dashed var(--line2);border-radius:12px;font-weight:300}
+.note b{color:var(--muted);font-weight:600}
+.foot{text-align:center;padding:30px 18px 10px;color:var(--muted2);font-size:11px;line-height:1.9;font-weight:300}
+.foot b{color:var(--muted);font-weight:600}
+.empty{text-align:center;padding:44px 20px;color:var(--muted2);font-size:14px}
+</style>
+</head>
+<body>
+<div id="grain"></div><div id="vignette"></div>
+<div id="app">
+
+<!-- ============ ARCHIVE VIEW ============ -->
+<section class="view on" id="v-home">
+  <div class="topbar" id="tb-home">
+    <div class="iconbtn" style="border-color:rgba(193,18,31,.4);background:rgba(193,18,31,.12)">
+      <svg viewBox="0 0 24 24"><path d="M3 7h18M3 12h18M3 17h11"/></svg>
+    </div>
+    <div class="tb-title">רצח · הארכיון</div>
+  </div>
+
+  <div class="hero">
+    <div class="kicker">ארכיון המאזינים</div>
+    <div class="brandmark">
+      <div class="stencil">רצח
+        <svg class="drip" viewBox="0 0 26 34"><path d="M6 0c0 6 5 8 5 13a5 5 0 1 1-10 0C1 8 6 6 6 0z"/><path class="d2" d="M17 2a2.6 2.6 0 1 1 0 5.2 2.6 2.6 0 0 1 0-5.2z"/></svg>
+      </div>
+    </div>
+    <p class="hero-sub">כל מה שדובר עליו בפרק — <b>ראיות, קורבנות, מכתבים, צירי זמן ומקורות</b> — במקום אחד. פרויקט מעריצים בהשראת <b>פודקאסט רצח</b> של מאיה גזית ושי מגל.</p>
+    <div class="tape">ARCHIVE · V2</div>
+  </div>
+
+  <div class="pad">
+    <div class="search">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <input id="q" type="search" placeholder="חיפוש רוצח, פרק או עונה…" autocomplete="off">
+    </div>
+  </div>
+  <div class="pad"><div class="chips" id="chips"></div></div>
+
+  <div class="pad">
+    <div class="sec-head"><h2>תיקים</h2><span id="count"></span></div>
+    <div class="cases" id="cases"></div>
+    <div class="note"><b>למה חלק מהתיקים מסומנים "בקרוב"?</b> הארכיון נבנה תיק־תיק. כל תיק מתועד ידנית מול מקורות מאומתים לפני שהוא נפתח — כדי שמה שכתוב פה יהיה נכון.</div>
+    <div class="foot">
+      פרויקט מחווה עצמאי · אינו מסונף לפודקאסט<br>
+      <b>האזינו לפרקים בספוטיפיי</b> · כל הזכויות על התוכן המקורי שמורות ליוצרים
+    </div>
+  </div>
+  <div class="spacer"></div>
+</section>
+
+<!-- ============ KILLER VIEW ============ -->
+<section class="view" id="v-killer">
+  <div class="topbar" id="tb-k">
+    <button class="iconbtn" id="back"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+    <div class="tb-title" id="tb-k-title"></div>
+  </div>
+  <div id="k-content"></div>
+  <div class="spacer"></div>
+</section>
+
+<!-- ============ PLAYER ============ -->
+<div id="player">
+  <div class="pl-bar">
+    <div class="pl-art"><span>ר</span></div>
+    <div class="pl-t"><h5 id="pl-title"></h5><p id="pl-sub"></p></div>
+    <button class="pl-btn" id="pl-toggle">האזן לפרק</button>
+  </div>
+  <div class="pl-embed"><iframe id="pl-frame" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe></div>
+</div>
+
+<!-- ============ SHEET ============ -->
+<div id="sheet"><div class="scrim"></div><div class="panel-s" id="sheet-body"></div></div>
+
+</div>
+<script>
+/* ================= RETZACH · ARCHIVE ================= */
+
+/* =====================================================================
+   תמונות · IMAGE REGISTRY
+   ---------------------------------------------------------------------
+   שים קבצי תמונה בתיקייה בשם  img  ליד קובץ ה-HTML, בשמות שלהלן.
+   אפשר גם להדביק כאן כתובת URL מלאה או data:image/jpeg;base64,...
+   אם קובץ חסר — מוצג במקומו איור SVG, בלי שום שגיאה.
+   ===================================================================== */
+const IMG = {
+  'logo':               'img/logo.jpg',
+  'dillon-composite':   'img/dillon-composite.jpg',
+  'dillon-illustration':'img/dillon-illustration.jpg',
+  'zelich-court':       'img/zelich-court.jpg',
+  'gamez-1':            'img/gamez-1.jpg',
+  'gamez-2':            'img/gamez-2.jpg',
+  'simonson-1':         'img/simonson-1.jpg',
+  'simonson-2':         'img/simonson-2.jpg'
+};
+/* photo(key, fallbackSvg, {contain}) -> HTML */
+function photo(key, fb, o = {}) {
+  const src = IMG[key];
+  if (!src) return `<div class="phwrap noimg"><div class="fb">${fb || ''}</div></div>`;
+  return `<div class="phwrap${o.contain ? ' contain' : ''}">
+    <img src="${src}" alt="" loading="lazy" onerror="this.closest('.phwrap').classList.add('noimg')">
+    <div class="fb">${fb || ''}</div></div>`;
+}
+
+/* ---------- SVG ART LIBRARY ---------- */
+const S = (b, extra = '') => `<svg class="art" viewBox="0 0 100 100" fill="none" stroke="#7a6d5e" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${extra}${b}</svg>`;
+const HALFTONE = `<defs><pattern id="ht" width="3" height="3" patternUnits="userSpaceOnUse"><circle cx="1.5" cy="1.5" r="0.75" fill="#4a4038"/></pattern></defs>`;
+
+const ART = {
+  sketch: S(`
+    <path d="M28 46c0-14 9-24 22-24s22 10 22 24c0 9-1 16-3 22-3 9-10 15-19 15s-16-6-19-15c-2-6-3-13-3-22z" fill="url(#ht)" stroke="#8a7c6b"/>
+    <path d="M27 44c1-12 10-20 23-20s22 8 23 20c1 4-1 6-3 5-6-3-12-4-20-4s-14 1-20 4c-2 1-4-1-3-5z" fill="#241d16" stroke="#a08f79" stroke-width="1.9"/>
+    <path d="M26.5 44h47" stroke="#a08f79" stroke-width="2.1"/>
+    <path d="M23 60c-2-4-1-8 1-9M77 60c2-4 1-8-1-9" stroke="#8a7c6b"/>
+    <circle cx="40" cy="55" r="7.5" stroke="#c1121f" stroke-width="1.7"/>
+    <circle cx="60" cy="55" r="7.5" stroke="#c1121f" stroke-width="1.7"/>
+    <path d="M47.5 55h5" stroke="#c1121f" stroke-width="1.7"/>
+    <path d="M32.5 55h-5M67.5 55h5" stroke="#c1121f" stroke-width="1.7"/>
+    <path d="M50 60v8M45 71h10"/>
+    <path d="M42 80c4 2.5 12 2.5 16 0"/>
+  `, HALFTONE),
+  letter: S(`
+    <rect x="22" y="16" width="56" height="70" rx="2" fill="#251e17" stroke="#8a7c6b"/>
+    <path d="M30 30h40M30 38h40M30 46h32M30 54h40M30 62h24"/>
+    <path d="M30 74h20" stroke="#c1121f" stroke-width="2"/>
+    <path d="M60 70l14 14M74 70l-14 14" stroke="#c1121f" stroke-width="1.4" opacity=".6"/>
+    <rect x="56" y="66" width="22" height="22" rx="3" stroke="#c1121f" stroke-width="1.2" opacity=".5" transform="rotate(-8 67 77)"/>
+  `),
+  rifle: S(`
+    <path d="M6 62c0-4 3-6 7-6l10-1 8-2" fill="#2a221a" stroke="#a08f79" stroke-width="2"/>
+    <path d="M6 62c0 5 4 8 9 8l8-1" stroke="#a08f79" stroke-width="2"/>
+    <path d="M15 70l3-14" stroke="#a08f79" stroke-width="1.6"/>
+    <rect x="23" y="50" width="26" height="10" rx="2" fill="#2a221a" stroke="#a08f79" stroke-width="1.9"/>
+    <path d="M49 52h44v5H49z" fill="#241d16" stroke="#a08f79" stroke-width="1.9"/>
+    <path d="M35 60l-1 9h9l-2-9" fill="#2a221a" stroke="#a08f79" stroke-width="1.8"/>
+    <path d="M34 62c3 3 8 3 9 0" stroke="#c1121f" stroke-width="1.5"/>
+    <path d="M28 50l5-9h6l-3 9" fill="#2a221a" stroke="#a08f79" stroke-width="1.8"/>
+    <circle cx="31" cy="41" r="2.2" fill="#c1121f" stroke="none"/>
+    <path d="M60 52v-6h14v6" fill="none" stroke="#8a7c6b" stroke-width="1.5"/>
+    <path d="M93 54.5h5" stroke="#c1121f" stroke-width="2.6"/>
+    <text x="70" y="78" text-anchor="middle" style="font-size:7px;fill:#5c5145;font-family:Heebo;font-weight:700" stroke="none">6.5×55</text>
+  `),
+  profile: S(`
+    <path d="M50 12l26 10v24c0 18-11 30-26 36-15-6-26-18-26-36V22z" fill="#241d16" stroke="#8a7c6b" stroke-width="1.9"/>
+    <circle cx="50" cy="42" r="9"/>
+    <path d="M35 66c3-8 8-12 15-12s12 4 15 12"/>
+    <path d="M40 26h20" stroke="#c1121f" stroke-width="1.8"/>
+  `),
+  calendar: S(`
+    <rect x="18" y="22" width="64" height="60" rx="4" fill="#241d16" stroke="#8a7c6b" stroke-width="1.8"/>
+    <path d="M18 36h64" stroke="#8a7c6b" stroke-width="1.8"/>
+    <path d="M32 22V14M68 22v-8"/>
+    ${[0,1,2,3].map(r=>[0,1,2,3,4,5].map(c=>`<path d="M${28+c*9} ${47+r*10}l4 4 5-7" stroke="${(r*6+c)%5===0?'#c1121f':'#5c5145'}" stroke-width="1.5"/>`).join('')).join('')}
+  `),
+  fire: S(`
+    <path d="M50 14c10 14 4 20 10 24 4 3 8-1 8-6 9 9 12 20 12 28 0 15-13 26-30 26S20 75 20 60c0-13 8-26 16-32 5-4 9-8 14-14z" fill="#2a1810" stroke="#c1121f" stroke-width="1.9"/>
+    <path d="M50 44c5 8 2 12 6 15 3 2 5-1 5-4 5 5 7 11 7 16 0 8-8 15-18 15s-18-7-18-15c0-8 5-15 10-19 3-2 6-5 8-8z" stroke="#e8232f" stroke-width="1.6"/>
+    <path d="M50 62c2 4 1 6 3 7" stroke="#c9a227" stroke-width="1.6"/>
+  `),
+  silencer: S(`
+    <rect x="14" y="44" width="34" height="11" rx="5.5" fill="#241d16" stroke="#a08f79" stroke-width="1.9"/>
+    <path d="M20 44v11M27 44v11M34 44v11M41 44v11" stroke="#5c5145"/>
+    <path d="M48 42h16v14H48z" fill="#2a221a" stroke="#a08f79" stroke-width="1.9"/>
+    <path d="M60 56l-4 18c-1 4 2 6 6 6h8" stroke="#a08f79" stroke-width="2.2"/>
+    <path d="M64 56h10v8H64z" stroke="#a08f79" stroke-width="1.8"/>
+    <path d="M72 34l6-8" stroke="#c1121f" stroke-width="1.8"/>
+  `),
+  witness: S(`
+    <circle cx="38" cy="34" r="11" stroke="#a08f79" stroke-width="1.9"/>
+    <path d="M18 74c2-13 9-20 20-20s18 7 20 20" stroke="#a08f79" stroke-width="1.9"/>
+    <path d="M58 22h28c3 0 5 2 5 5v18c0 3-2 5-5 5H74l-8 8v-8h-8c-3 0-5-2-5-5V27c0-3 2-5 5-5z" fill="#241d16" stroke="#c1121f" stroke-width="1.7"/>
+    <path d="M62 32h20M62 40h13" stroke="#c1121f" stroke-width="1.5"/>
+  `),
+  arsenal: S(`
+    <path d="M20 82V26M34 82V22M48 82V28M62 82V20M76 82V26" stroke="#a08f79" stroke-width="2.2"/>
+    <path d="M14 82h72" stroke="#8a7c6b" stroke-width="2.4"/>
+    <rect x="16" y="38" width="8" height="6" rx="1" fill="#2a221a" stroke="#a08f79" stroke-width="1.4"/>
+    <rect x="30" y="34" width="8" height="6" rx="1" fill="#2a221a" stroke="#c1121f" stroke-width="1.4"/>
+    <rect x="44" y="40" width="8" height="6" rx="1" fill="#2a221a" stroke="#a08f79" stroke-width="1.4"/>
+    <rect x="58" y="32" width="8" height="6" rx="1" fill="#2a221a" stroke="#c1121f" stroke-width="1.4"/>
+    <rect x="72" y="38" width="8" height="6" rx="1" fill="#2a221a" stroke="#a08f79" stroke-width="1.4"/>
+  `),
+  ballistics: S(`
+    <circle cx="46" cy="50" r="30" stroke="#8a7c6b"/><circle cx="46" cy="50" r="21" stroke="#8a7c6b"/>
+    <circle cx="46" cy="50" r="12" stroke="#c1121f"/><circle cx="46" cy="50" r="4" fill="#c1121f" stroke="none"/>
+    <path d="M86 34l-26 11" stroke="#c1121f" stroke-width="1.6" stroke-dasharray="3 3"/>
+    <path d="M78 26l10-4-4 10z" fill="#c1121f" stroke="none"/>
+  `),
+  drawing: S(`
+    <rect x="18" y="18" width="64" height="60" rx="3" fill="#241d16" stroke="#8a7c6b" stroke-width="1.8"/>
+    <circle cx="36" cy="38" r="7"/><circle cx="62" cy="38" r="7"/>
+    <path d="M36 45v10M62 45v10M28 58h16M54 58h16"/>
+    <path d="M30 68c8-4 32-4 40 0" stroke="#c1121f" stroke-width="1.6"/>
+    <path d="M74 74l12-12 6 6-12 12-8 2z" fill="#2a221a" stroke="#c9a227" stroke-width="1.6"/>
+  `),
+  petition: S(`
+    <rect x="24" y="14" width="52" height="72" rx="3" fill="#241d16" stroke="#8a7c6b" stroke-width="1.8"/>
+    <path d="M32 28h36M32 36h36M32 44h24"/>
+    <path d="M32 58c6-6 10 4 16-2s10 4 20-4" stroke="#c1121f" stroke-width="1.7"/>
+    <path d="M32 70c6-5 10 3 16-2s10 3 20-3" stroke="#c1121f" stroke-width="1.7" opacity=".6"/>
+  `),
+  gavel: S(`
+    <rect x="44" y="14" width="34" height="16" rx="3" fill="#2a221a" stroke="#a08f79" stroke-width="1.9" transform="rotate(38 61 22)"/>
+    <path d="M46 34L24 62" stroke="#a08f79" stroke-width="3.4"/>
+    <path d="M18 74h34" stroke="#c1121f" stroke-width="3"/>
+    <path d="M62 62l16 16" stroke="#5c5145" stroke-width="1.4" stroke-dasharray="3 3"/>
+  `),
+  prison: S(`
+    <rect x="20" y="20" width="60" height="62" rx="3" fill="#241d16" stroke="#8a7c6b" stroke-width="1.8"/>
+    <path d="M32 20v62M44 20v62M56 20v62M68 20v62" stroke="#a08f79" stroke-width="2"/>
+    <circle cx="50" cy="44" r="7" stroke="#c1121f" stroke-width="1.6"/>
+    <path d="M38 66c3-7 8-10 12-10s9 3 12 10" stroke="#c1121f" stroke-width="1.6"/>
+  `),
+  suitcase: S(`
+    <rect x="16" y="34" width="68" height="48" rx="6" fill="#241d16" stroke="#a08f79" stroke-width="2"/>
+    <path d="M38 34v-6a4 4 0 0 1 4-4h16a4 4 0 0 1 4 4v6" stroke="#a08f79" stroke-width="2"/>
+    <path d="M16 50h68M16 66h68" stroke="#5c5145"/>
+    <rect x="42" y="44" width="16" height="10" rx="2" fill="#2a221a" stroke="#c1121f" stroke-width="1.8"/>
+    <path d="M28 82v6M72 82v6" stroke="#8a7c6b"/>
+    <path d="M62 24l14-8" stroke="#c1121f" stroke-width="1.5" stroke-dasharray="3 3"/>
+  `),
+  handcuffs: S(`
+    <circle cx="32" cy="56" r="17" stroke="#a08f79" stroke-width="2.4"/>
+    <circle cx="32" cy="56" r="12" stroke="#5c5145" stroke-width="1.4"/>
+    <circle cx="68" cy="56" r="17" stroke="#a08f79" stroke-width="2.4"/>
+    <circle cx="68" cy="56" r="12" stroke="#5c5145" stroke-width="1.4"/>
+    <path d="M46 50h8M46 62h8" stroke="#c1121f" stroke-width="2.2"/>
+    <path d="M32 39v-8M68 39v-8" stroke="#8a7c6b" stroke-width="1.6"/>
+    <text x="50" y="20" text-anchor="middle" style="font-size:8px;fill:#7a6d5e;font-family:Rubik;font-weight:700" stroke="none">mrhandcuffs</text>
+  `),
+  police: S(`
+    <path d="M50 12l28 9v26c0 17-12 30-28 37-16-7-28-20-28-37V21z" fill="#241d16" stroke="#a08f79" stroke-width="2"/>
+    <path d="M50 30l4.6 9.4 10.4 1.5-7.5 7.3 1.8 10.3L50 53.6 40.7 58.5l1.8-10.3-7.5-7.3 10.4-1.5z" fill="#2a221a" stroke="#c9a227" stroke-width="1.6"/>
+    <path d="M36 70h28" stroke="#c1121f" stroke-width="2"/>
+    <path d="M22 24l56 44" stroke="#c1121f" stroke-width="2.4" opacity=".85"/>
+  `),
+  dental: S(`
+    <path d="M50 20c-8-6-22-5-25 6-3 10 2 18 4 28 2 9 3 20 8 20s4-14 13-14 8 14 13 14 6-11 8-20c2-10 7-18 4-28-3-11-17-12-25-6z" fill="#241d16" stroke="#a08f79" stroke-width="2"/>
+    <path d="M50 20v10" stroke="#5c5145"/>
+    <circle cx="50" cy="46" r="9" stroke="#c1121f" stroke-width="1.7"/>
+    <path d="M57 53l9 9" stroke="#c1121f" stroke-width="2.2"/>
+  `),
+  crate: S(`
+    <rect x="18" y="30" width="64" height="46" rx="3" fill="#241d16" stroke="#a08f79" stroke-width="2"/>
+    <path d="M18 30l64 46M82 30L18 76" stroke="#5c5145" stroke-width="1.4"/>
+    <path d="M18 44h64M18 62h64" stroke="#8a7c6b" stroke-width="1.6"/>
+    <path d="M40 84h20" stroke="#c1121f" stroke-width="2.2"/>
+    <path d="M44 22h12v8H44z" fill="#2a221a" stroke="#c1121f" stroke-width="1.6"/>
+  `),
+  chat: S(`
+    <rect x="14" y="20" width="72" height="48" rx="5" fill="#241d16" stroke="#a08f79" stroke-width="2"/>
+    <path d="M40 68l-3 12h26l-3-12M30 80h40" stroke="#a08f79" stroke-width="1.8"/>
+    <rect x="22" y="30" width="26" height="16" rx="3" fill="#2a221a" stroke="#5c5145" stroke-width="1.4"/>
+    <rect x="54" y="30" width="24" height="12" rx="3" fill="#2a221a" stroke="#c1121f" stroke-width="1.5"/>
+    <path d="M22 54h34" stroke="#c1121f" stroke-width="1.8"/>
+  `),
+  hotel: S(`
+    <rect x="16" y="18" width="68" height="64" rx="4" fill="#241d16" stroke="#a08f79" stroke-width="2"/>
+    <rect x="26" y="28" width="14" height="12" rx="2" stroke="#5c5145" stroke-width="1.4"/>
+    <rect x="46" y="28" width="14" height="12" rx="2" stroke="#5c5145" stroke-width="1.4"/>
+    <rect x="66" y="28" width="8" height="12" rx="2" stroke="#5c5145" stroke-width="1.4"/>
+    <rect x="26" y="50" width="14" height="12" rx="2" stroke="#c1121f" stroke-width="1.6"/>
+    <rect x="46" y="50" width="14" height="12" rx="2" stroke="#5c5145" stroke-width="1.4"/>
+    <path d="M34 82V70h14v12" stroke="#a08f79" stroke-width="1.8"/>
+    <path d="M62 74h14" stroke="#c1121f" stroke-width="2"/>
+  `),
+  scale: S(`
+    <path d="M50 18v58M34 76h32" stroke="#a08f79" stroke-width="2.4"/>
+    <path d="M22 32h56" stroke="#a08f79" stroke-width="2.2"/>
+    <circle cx="50" cy="26" r="3.4" fill="#c1121f" stroke="none"/>
+    <path d="M22 32l-8 18h16zM78 32l-8 18h16z" fill="#241d16" stroke="#c1121f" stroke-width="1.7"/>
+  `),
+  portrait: S(`
+    <rect x="16" y="14" width="68" height="72" rx="5" fill="#1c1710" stroke="#4a4038" stroke-width="1.6"/>
+    <circle cx="50" cy="44" r="14" stroke="#5c5145" stroke-width="1.8"/>
+    <path d="M27 78c4-14 12-21 23-21s19 7 23 21" stroke="#5c5145" stroke-width="1.8"/>
+    <text x="50" y="94" text-anchor="middle" style="font-size:6px;fill:#4a4038;font-family:Rubik;font-weight:600" stroke="none">תמונה</text>
+  `),
+  mother: S(`
+    <path d="M50 82C30 68 18 56 18 42c0-10 8-17 17-17 6 0 11 3 15 8 4-5 9-8 15-8 9 0 17 7 17 17 0 14-12 26-32 40z" fill="#2a1013" stroke="#c1121f" stroke-width="1.9"/>
+    <path d="M36 40h28M36 48h20" stroke="#e8b0b0" stroke-width="1.5" opacity=".7"/>
+  `)
+};
+
+/* ---------- DATABASE ---------- */
+const EPISODES = [
+  { id:'dillon', s:5, e:1, name:'תומאס דילון', date:'10.09.2025', dur:'1:10', tag:'סניפר', ready:true,
+    img:'dillon-composite', teaser:'צייד חובב נשק שעולם הפנטזיה שלו הפך למסוכן יותר ויותר' },
+  { id:null, s:5, e:7, name:"בנג'מין גונזלס", date:'26.07.2026', dur:'1:02', tag:'', ready:false },
+  { id:null, s:5, e:6, name:'שרון קייני', date:'27.05.2026', dur:'1:11', tag:'', ready:false },
+  { id:null, s:5, e:5, name:"לארי ג'ין בל", date:'13.03.2026', dur:'1:02', tag:'חטיפה', ready:false },
+  { id:null, s:5, e:4, name:'טרי רסמוסן', date:'18.01.2026', dur:'1:15', tag:'זהויות', ready:false },
+  { id:null, s:5, e:3, name:'חואנה בארסה', date:'21.11.2025', dur:'0:59', tag:'מקסיקו', ready:false },
+  { id:null, s:5, e:2, name:'רוברט ברדלה', date:'03.10.2025', dur:'1:19', tag:'קנזס סיטי', ready:false },
+  { id:'zelich', s:4, e:9, name:'סטיבן זליך', date:'27.05.2025', dur:'0:59', tag:'שוטר', ready:true, img:'zelich-court' },
+  { id:null, s:4, e:8, name:'גלנון אנגלמן', date:'10.04.2025', dur:'1:10', tag:'רופא שיניים', ready:false },
+  { id:null, s:4, e:7, name:"לאונרד לייק וצ'ארלס אנג' · חלק ב", date:'09.02.2025', dur:'0:32', tag:'', ready:false }
+];
+
+const DILLON = {
+  id:'dillon', name:'תומאס לי דילון', short:'תומאס דילון', en:'Thomas Lee Dillon',
+  alias:'צייד בני האדם',
+  ep:'עונה 5 · פרק 1', epDate:'10 בספטמבר 2025', spotify:'2LmyCUQE4omZuJRwWK1Sb4',
+  epUrl:'https://open.spotify.com/episode/2LmyCUQE4omZuJRwWK1Sb4',
+  heroKey:'dillon-composite', heroArt:'sketch', map:'ohio', caseLabel:'CASE FILE · OHIO 1989–1992',
+  line:'בין 1989 ל־1992 מישהו ירה למוות בגברים שיצאו לטבע באוהיו. בלי מניע, בלי היכרות, בלי דפוס שאפשר לתפוס. חמישה הרוגים, שלוש שנים, ורוצח שנראה כמו כל אחד.',
+  stats:[ {n:5,l:'קורבנות'}, {n:165,l:'שנים עד תנאי'}, {n:3,l:'שנות רצח'} ],
+
+  facts:[
+    ['נולד','9 ביולי 1950, קנטון, אוהיו'],
+    ['נפטר','21 באוקטובר 2011 (בן 61), מסרטן, במרכז הרפואי של שב״ס אוהיו'],
+    ['השכלה','בוגר עיתונאות, אוניברסיטת אוהיו סטייט (1972)'],
+    ['עיסוק','שרטט במחלקת המים של קנטון — 12 שנה'],
+    ['מצב משפחתי','נשוי (מ־1978), אב לבן אחד'],
+    ['אזור הפעילות','מזרח־מרכז אוהיו — 5 מחוזות'],
+    ['נשק','רובי מאוזר — 6.5×55 שוודי ו־.308'],
+    ['נעצר','27 בנובמבר 1992'],
+    ['הכרעה','12 ביולי 1993 — הודה ב־5 רציחות']
+  ],
+
+  story:[
+    {h:'הילד עם לוח המוות', t:`אביו של תומאס דילון מת כשהוא היה בן <b>15 חודשים</b>. הוא גדל אצל אם שתוארה כקרה וריחוקה רגשית, ילד שקט שלא בלט לרעה. בגיל ההתבגרות הוא תלה בחדרו <em>לוח מוות</em> — טבלה שבה סימן כל חיה שהרג. הלוח לא נעצר. בתחילת שנות ה־80 הוא כבר התפאר במספר <b>500</b>. בסופו של דבר הוא יודה בהריגת <b>יותר מ־1,000</b> חיות מחמד וחיות משק. בעבודה קראו לו "Killer" — כינוי חיבה משרדי, בדיחה פנימית.`},
+    {h:'האדם הנורמלי לחלוטין', t:`בגיל 22 הוא סיים תואר בעיתונאות. הוא עבד 12 שנה כשרטט במחלקת המים העירונית. התחתן ב־1978. היה לו בן. הוא שילם משכנתה, הלך לירידי נשק בסופי שבוע, ושתה. <b>אף אחד לא ראה את זה בא</b> — וזה בדיוק החלק שהפסיכולוג המשפטי ד"ר ג'פרי סמולדון יגדיר בהמשך כמפחיד ביותר בתיק.`},
+    {h:'ההסלמה', t:`מהחיות הוא עבר לחיות מחמד — כלבים בחצרות של שכנים, חתולים בצד הדרך. במקביל נשרפו רפתות. בין 1988 ל־1992 נרשמו כ־<b>108 הצתות</b> בארבעה מחוזות; דילון עצמו הודה בהמשך ב־<b>160 שריפות</b> לאורך חמש שנים. שריף מחוז נובל העריך את הנזק ביותר מ־<b>2 מיליון דולר</b>. הוא גם ירה בשלטי דרכים, בחלונות ראווה ובמכוניות חונות. ואז, ב־1 באפריל 1989, הוא ירה באדם.`},
+    {h:'למה לא תפסו אותו', t:`חמש הרציחות התפרסו על פני חמישה מחוזות, שלוש שנים, ושלושה סוגי פעילות שונים — ריצה, ציד ודיג. <b>לא היה מניע, לא היתה היכרות, ולא היה קשר בין הקורבנות.</b> משטרות המחוזות לא דיברו ביניהן, וה־FBI לא זיהה דפוס עד הרצח השלישי. מותו של קווין לורינג סווג בכלל כתאונת ציד עד שסווג מחדש כרצח. רק כשקלוד הוקינס נורה על <b>אדמה פדרלית</b> — סכר ווילס קריק — נפתחה חקירה משותפת.`},
+    {h:'איך הוא נתפס', t:`ב־11 באוגוסט 1992 פורסם בעיתונות הפרופיל של יחידת מדעי ההתנהגות בקוונטיקו. <b>ריצ'רד פריי</b>, חבר מחטיבת הביניים, קרא אותו וזיהה את חברו הישן — הוא כבר ניסה להתקשר ל־FBI פעם אחת ולא חזרו אליו. ב־26 באוגוסט הוא התקשר לסמל הבלשים וולטר וילסון. שישה שבועות של מעקב מאוחר יותר, ב־27 בנובמבר 1992, דילון נעצר ביציאה מחנות נוחות — על החזקת נשק בניגוד לעסקת טיעון קודמת. ב־4 בדצמבר הביא סוחר נשק ממחוז סטארק רובה מאוזר שוודי שדילון מכר לו ב־6 באפריל 1992 — <b>יום אחרי רצח גארי ברדלי</b>. הבליסטיקה סגרה את התיק.`}
+  ],
+
+  quotes:[
+    {t:'לא הרגשתי כלום. הם פשוט היו שם. במקום הלא נכון בזמן הלא נכון.', by:'תומאס דילון', role:'על חמשת הקורבנות'},
+    {t:'אני המרצח של ג\'יימי פקסטון. משהו בראש שלי הופך אותי לרוצח חסר רחמים, בלי מצפון.', by:'מתוך המכתב האנונימי', role:'נשלח לעיתון Times Leader'},
+    {t:'לא חשבתי על הירי בפקסטון יותר משחשבתי על ירי בבקבוק במזבלה.', by:'תומאס דילון', role:'מתוך המכתב'},
+    {t:'יש לי בעיות רציניות. אני משוגע. אני רוצה להרוג. אני רוצה להרוג.', by:'תומאס דילון', role:'בבית המשפט'},
+    {t:'מה שאתה רואה זה מישהו שנראה ומתנהג בצורה נורמלית באופן מפחיד.', by:'ד"ר ג\'פרי סמולדון', role:'פסיכולוג משפטי'},
+    {t:'האם היה לך קל יותר אם הייתי כותבת מילות שנאה? אני לא יכולה — כי אני לא מרגישה שנאה.', by:'ג\'ין פקסטון', role:'אמו של ג\'יימי, במכתב גלוי לרוצח'}
+  ],
+
+  victims:[
+    {n:1, name:'דונלד ולינג', en:'Donald Welling', age:35, from:'סטרסבורג, אוהיו',
+     date:'1 באפריל 1989', county:'מחוז טוסקרוואס', act:'הליכה/ריצה',
+     x:74, y:51,
+     d:`ולינג, בן 35, יצא להליכה על כביש מחוזי 94 באזור כפרי. הוא נורה למוות ללא כל מגע מוקדם עם היורה. זה היה הרצח הראשון בסדרה — ובאותו רגע אף אחד לא ידע שיש סדרה. במשך שנה וחצי התיק נשאר לבדו, בלי חשוד ובלי מניע.`,
+     tags:['הרצח הראשון','כביש כפרי','ללא עדים']},
+    {n:2, name:"ג'יימי פקסטון", en:'Jamie Paxton', age:21, from:'באנוק, אוהיו',
+     date:'10 בנובמבר 1990', county:'מחוז בלמונט', act:'ציד בקשת',
+     x:82, y:57,
+     d:`פקסטון, בן 21, יצא לצוד בקשת. הוא נורה <b>שלוש פעמים</b> — בחזה, בברך ובישבן. הרצח שלו הפך לנקודת המפנה של כל התיק: אמו, <b>ג'ין פקסטון</b>, פרסמה מכתבים גלויים לרוצח בעיתון Times Leader במשך חודשים. ואז, יום אחד, הוא ענה.`,
+     tags:['3 יריות','הרצח שפיצח את התיק','אם שכתבה לרוצח']},
+    {n:3, name:'קווין לורינג', en:'Kevin Loring', age:30, from:'דוקסברי, מסצ\'וסטס',
+     date:'28 בנובמבר 1990', county:'מחוז מסקינגהם', act:'ציד צבאים',
+     x:66, y:63,
+     d:`שמונה עשר יום בלבד אחרי פקסטון. לורינג הגיע ממסצ'וסטס לציד צבאים באוהיו ונורה למוות. מותו סווג תחילה כ<b>תאונת ציד</b> — טעות שעיכבה את זיהוי הדפוס בחודשים. רק בדיעבד הוא סווג מחדש כרצח.`,
+     tags:['18 יום אחרי פקסטון','סווג כתאונה','תייר מחוץ למדינה']},
+    {n:4, name:'קלוד הוקינס', en:'Claude Hawkins', age:48, from:'מנספילד, אוהיו',
+     date:'14 במרץ 1992', county:'מחוז קושוקטון',  act:'דיג',
+     x:65, y:53,
+     d:`אחרי הפסקה של שנה ורבע, דילון חזר. הוקינס, בן 48, דג בסכר ווילס קריק — <b>שטח בבעלות פדרלית</b>. זה שינה הכל: הרצח הפדרלי גרר את ה־FBI פנימה, וביחד עם שוטרים מארבעה מחוזות ואגף משאבי הטבע של אוהיו הוקם כוח משימה משותף. הבליסטיקה תקשור בהמשך את הרובה לרצח הזה ברמת התאמה של כ־90%.`,
+     tags:['שטח פדרלי','כניסת ה־FBI','התאמה בליסטית ~90%']},
+    {n:5, name:'גארי ברדלי', en:'Gary Bradley', age:44, from:'וויליאמסטאון, מערב וירג\'יניה',
+     date:'5 באפריל 1992', county:'מחוז נובל', act:'דיג',
+     x:75, y:65,
+     d:`שלושה שבועות אחרי הוקינס. ברדלי, בן 44, דג ליד קולדוול ונורה למוות. זה היה הרצח האחרון — ובסופו של דבר הראשון שנסגר. <b>יום למחרת</b>, ב־6 באפריל 1992, דילון מכר את רובה המאוזר השוודי שלו ביריד נשק במסילון. הרובה יצוץ מחדש שמונה חודשים אחר כך, אצל סוחר נשק שקרא בעיתון.`,
+     tags:['הרצח האחרון','הרובה נמכר למחרת','התאמה בליסטית 100%']}
+  ],
+
+  timeline:[
+    {y:'1950', t:'נולד בקנטון, אוהיו', d:'9 ביולי. אביו ימות כשהוא בן 15 חודשים.'},
+    {y:'שנות ה־60', t:'לוח המוות', d:'כנער הוא מתחיל לתעד בחדרו כל חיה שהרג. הרשימה תגיע ל־500 עד תחילת שנות ה־80.'},
+    {y:'1972', t:'תואר באוניברסיטת אוהיו סטייט', d:'בוגר עיתונאות. מתחיל לעבוד כשרטט במחלקת המים של קנטון.'},
+    {y:'1978', t:'מתחתן', d:'חיים לכאורה רגילים לחלוטין. בעבודה מכנים אותו "Killer" בגלל ההתפארות בהריגת חיות.'},
+    {y:'שנות ה־80', t:'מעבר לחיות מחמד', d:'הורג כלבים וחתולים של שכנים. פעם אחת מניח כלב מת מתחת לגריל של שכן. מטריד ילדים של חברים עם פגרים.'},
+    {y:'1984', t:'ירי בפנסילבניה', d:'נחקר בחשד לירי בג\'ון ג\'וזף הרווט ב־28 בנובמבר. סירב לדבר על כך. מעולם לא הואשם.'},
+    {y:'1988–1992', t:'גל ההצתות', d:'108 הצתות מדווחות בארבעה מחוזות. דילון יודה ב־160 שריפות. נזק מוערך מעל 2 מיליון דולר.'},
+    {y:'1989', t:'רצח דונלד ולינג', d:'1 באפריל · מחוז טוסקרוואס. הרצח הראשון.', kill:true},
+    {y:'1990', t:"רצח ג'יימי פקסטון", d:'10 בנובמבר · מחוז בלמונט. שלוש יריות.', kill:true},
+    {y:'1990', t:'רצח קווין לורינג', d:'28 בנובמבר · מחוז מסקינגהם. סווג תחילה כתאונת ציד.', kill:true},
+    {y:'1991', t:'נתפס עם משתיק קול', d:'אוגוסט. פקח ציד עוצר אותו על ירי לא חוקי; בטנדר נמצא אקדח .22 עם משתיק קול. כתב אישום פדרלי.'},
+    {y:'1992', t:'רצח קלוד הוקינס', d:'14 במרץ · סכר ווילס קריק, שטח פדרלי. ה־FBI נכנס לתיק.', kill:true},
+    {y:'1992', t:'רצח גארי ברדלי', d:'5 באפריל · מחוז נובל. הרצח החמישי והאחרון.', kill:true},
+    {y:'1992', t:'מוכר את הרובה — יום אחרי', d:'6 באפריל. מוכר את המאוזר השוודי 6.5×55 ביריד נשק במסילון. הכלי שיפליל אותו.'},
+    {y:'1992', t:'עסקת טיעון על משתיק הקול', d:'יולי. מודה בשתי עבירות החזקת משתיק קול. מקבל מבחן ואיסור מוחלט להחזיק נשק.'},
+    {y:'1992', t:'הפרופיל מתפרסם', d:'11 באוגוסט. ה־FBI מפרסם את הפרופיל ההתנהגותי בעיתונות המקומית.'},
+    {y:'1992', t:"ריצ'רד פריי מתקשר", d:'26 באוגוסט. חבר ילדות קורא את הפרופיל, מזהה את דילון ומוסר את שמו לבלש וולטר וילסון.'},
+    {y:'1992', t:'נעצר', d:'27 בנובמבר, אחרי כשישה שבועות של מעקב. נעצר ביציאה מחנות נוחות במחוז טוסקרוואס.'},
+    {y:'1992', t:'הרובה חוזר', d:'4 בדצמבר. סוחר נשק ממחוז סטארק מוסר את המאוזר. בליסטיקה: התאמה מלאה לרצח ברדלי, ~90% להוקינס.'},
+    {y:'1993', t:'מודה ב־5 רציחות', d:'12 ביולי, בבית המשפט של מחוז נובל. חמישה מאסרי עולם רצופים — 165 שנה עד זכאות לשחרור על תנאי. הודה רק אחרי שעונש המוות ירד מהשולחן.'},
+    {y:'1993', t:'8,000 חתימות', d:'תושבי אוהיו חותמים על עצומה שדורשת לשלוח אותו דווקא לכלא הביטחוני Southern Ohio Correctional Facility. המדינה נענתה.'},
+    {y:'2011', t:'מת בכלא', d:'21 באוקטובר, בן 61, מסרטן — שלושה שבועות אחרי שאושפז.'},
+    {y:'2023', t:'הד מאוחר', d:"הרשעתו של ג'ף טייטוס במישיגן בוטלה ב־2023; דילון הועלה כחשוד חלופי ברצח דאג אסטס וג'ים בנט ב־1990."}
+  ],
+
+  evidence:[
+    {k:'sketch', art:'sketch', img:'dillon-composite', wide:true, t:'הקלסתרון', s:'ראיה 01',
+     p:'הדמות שחיפשו — כובע גרב ומשקפיים.',
+     b:`הקלסתרון שהופץ במהלך החקירה תיאר גבר במשקפיים ובכובע גרב. השוואה בין הקלסתרון לבין תמונתו של דילון בבית המשפט היא אחד הרגעים החזקים של התיק — <b>הדמיון קרוב להפליא</b>, ובכל זאת הוא הסתובב חופשי במשך שלוש שנים.<br><br><b>שים לב:</b> האיור כאן הוא המחשה סגנונית. הקלסתרון המקורי מופיע במקורות המקושרים בלשונית "מקורות".`},
+    {k:'letter', art:'letter', t:'המכתב האנונימי', s:'ראיה 02',
+     p:'הוא ענה לאם של הקורבן שלו.',
+     b:`אחרי חודשים שבהם <b>ג'ין פקסטון</b>, אמו של ג'יימי, פרסמה מכתבים גלויים לרוצח בעיתון Times Leader — הוא ענה. מכתב מודפס במכונת כתיבה, אנונימי, שנשלח מדואר מחוץ למרטינס פרי.<br><br>הוא הוכיח את זהותו בפרטים מזירת הרצח שלא פורסמו: שלוש היריות — חזה, ברך, ישבן.<br><br><i>"אני המרצח של ג'יימי פקסטון... משהו בראש שלי הופך אותי לרוצח חסר רחמים, בלי מצפון."</i><br><i>"הייתי שיכור מאוד וקול בראש אמר לי: תעשה את זה."</i><br><i>"חמש דקות אחרי שיריתי בפקסטון, שתיתי בירה וכבר מחקתי הכל מהראש."</i><br><br>המכתב היה גם ההוכחה החזקה ביותר שהרוצח קורא את העיתונות המקומית — מה שהוביל בהמשך לפרסום הפרופיל.`},
+    {k:'mother', art:'mother', t:'המכתבים של ג\'ין פקסטון', s:'ראיה 03',
+     p:'אם שכתבה לרוצח של בנה, בעיתון.',
+     b:`ג'ין פקסטון סירבה לשתוק. היא פרסמה מכתבים גלויים בעיתון המקומי, מכוונים ישירות לרוצח.<br><br><i>"האם היה לך קל יותר אם הייתי כותבת מילות שנאה? אני לא יכולה, כי אני לא מרגישה שנאה."</i><br><br>באוקטובר 1991, כמעט שנה אחרי:<br><i>"עברה כמעט שנה מאז שהרגת את הבן שלי. המשפחה שלנו לא חיה מאז ה־10 בנובמבר. אנחנו שורדים יום אחד בכל פעם."</i><br><br>אחרי גזר הדין היא התקשרה אליו וקראה לו <b>"פחדן עלוב"</b>. היא דיברה איתו על חרטה במשך שעה, וסיימה:<br><i>"דיברנו מספיק. אני לא יכולה לשנוא אותך, אבל לעולם לא אוכל לסלוח לך."</i>`},
+    {k:'rifle', art:'rifle', t:'המאוזר השוודי', s:'ראיה 04',
+     p:'6.5×55 · נמכר יום אחרי הרצח האחרון.',
+     b:`רובה <b>מאוזר שוודי 6.5×55</b>. דילון מכר אותו לסוחר נשק ממחוז סטארק ביריד נשק במסילון ב־<b>6 באפריל 1992</b> — יום אחד בדיוק אחרי שרצח את גארי ברדלי.<br><br>ב־4 בדצמבר 1992, אחרי פנייה ציבורית לאיתור מכירות נשק ותחמושת, הסוחר הביא את הרובה לרשויות. בדיקות בליסטיות של ה־FBI קבעו:<br>· <b>התאמה מלאה (100%)</b> — רצח גארי ברדלי<br>· <b>התאמה של כ־90%</b> — רצח קלוד הוקינס<br><br>ברציחות האחרות נעשה שימוש ברובה <b>.308 מאוזר</b>.`},
+    {k:'profile', art:'profile', t:'הפרופיל של ה־FBI', s:'ראיה 05',
+     p:'מה קוונטיקו קלעה — ומה פספסה.',
+     b:`יחידת מדעי ההתנהגות בקוונטיקו בנתה פרופיל שהתבסס בין השאר על המכתב האנונימי. הוא פורסם בעיתונות ב־<b>11 באוגוסט 1992</b>.<br><br><b>מה שהיה מדויק:</b><br>· גבר לבן משכיל<br>· נטייה להצתות ולהריגת חיות מחמד<br>· ייתכן שהוא איש משפחה "נורמלי" — אבל בעיקרו בודד<br>· היסטוריה של ונדליזם כפייתי<br>· בעיית אלכוהול; הירי מתרחש בשכרות ובעקבות מתח<br><br><b>מה שפוספס:</b><br>· ההערכה היתה שהוא גר קרוב מאוד לזירות — דילון נסע עד 150 מייל<br>· ההערכה היתה שהוא בשנות ה־20 לחייו — בפועל הוא היה בן 42 במעצר<br><br>למרות אי־הדיוקים, זה הפרופיל שגרם לריצ'רד פריי להרים טלפון.`},
+    {k:'witness', art:'witness', t:"עדות ריצ'רד פריי", s:'ראיה 06',
+     p:'חבר הילדות ששבר את התיק.',
+     b:`פריי ודילון הכירו בחטיבת הביניים. כנערים הם נסעו יחד בכפר, ירו בשלטים ובחיות והציתו שריפות. פריי התרחק כשדילון עבר לחיות מחמד:<br><i>"אמרתי לו: תום, אתה חייב להפסיק. אחרת אני לא יוצא איתך יותר. אלה חיות של אנשים."</i><br><br>בנסיעות לירידי נשק דילון שאל אותו:<br><i>"אתה מבין שאפשר לצאת לכפר, למצוא מישהו, ואין עדים? אפשר לירות בו. אין מניע. אתה מבין כמה קל להתחמק מרצח?"</i><br><br>ובפעם אחרת, בשיחה על טד באנדי:<br><i>"תום שאל אותי — 'אתה חושב שאי פעם הרגתי מישהו?' השאלה תפסה אותי לגמרי לא מוכן. הדרך שבה הוא אמר את זה היתה ממש מפחידה."</i><br><br>פריי גם עזר להתאים חצים שנמצאו בפרות מתות לחצים של דילון. הוא כבר ניסה להתקשר ל־FBI פעם אחת — והשאירו הודעה שלא חזרו אליה.`},
+    {k:'calendar', art:'calendar', t:'לוח המוות', s:'ראיה 07',
+     p:'500 חיות. ואז יותר מ־1,000.',
+     b:`כנער תלה דילון בחדרו לוח שבו סימן כל חיה שהרג. עד תחילת שנות ה־80 הוא התפאר שהלוח הגיע ל־<b>500</b>. בהמשך הוא הודה בהריגת <b>יותר מ־1,000 חיות מחמד וחיות משק</b>.<br><br>הוא נהג להביא חיות מתות הביתה. במקרה אחד הניח כלב הרוג מתחת לגריל של שכן. באמצע שנות ה־80 הוא הטריד ילדים של חברים באמצעות פגרים — והוגשה נגדו תלונה אחת במשטרה על הריגת כלב.<br><br>בעבודה במחלקת המים הכינוי שלו היה, פשוטו כמשמעו, <b>"Killer"</b>.`},
+    {k:'fire', art:'fire', t:'תיק ההצתות', s:'ראיה 08',
+     p:'160 שריפות · מעל 2 מיליון דולר נזק.',
+     b:`בין 1988 ל־1992 נרשמו כ־<b>108 הצתות</b> בארבעה מחוזות. דילון עצמו הודה ב־<b>160 שריפות</b> לאורך חמש שנים.<br><br>שריף מחוז נובל העריך את הנזק ב<b>יותר מ־2 מיליון דולר</b>.<br><br>המחוזות שנפגעו: קושוקטון, בלמונט, גרנזי, קרול, קולומביאנה וטוסקרוואס.<br><br>במקביל הוא ירה בשלטי דרכים, בחלונות של חנויות ובמכוניות חונות — התנהגות שריצ'רד פריי דיווח עליה לרשויות באוגוסט 1992.`},
+    {k:'silencer', art:'silencer', t:'משתיק הקול', s:'ראיה 09',
+     p:'אוגוסט 1991 — המעצר שלא היה.',
+     b:`באוגוסט 1991, בין הרצח השלישי לרביעי, פקח ציד עצר את דילון על ירי למטרה שלא כחוק. בחיפוש בטנדר שלו נמצא <b>אקדח .22 עם משתיק קול</b> — עבירה פדרלית.<br><br>ביולי 1992 נחתמה עסקת טיעון: הודאה בשתי עבירות של החזקת משתיק קול בלתי חוקי, בתמורה למבחן ולאיסור מוחלט להחזיק נשק.<br><br>הוא הפר את האיסור מיד. בין ה־7 ל־21 בנובמבר 1992 הוא רכש רובה .22 ואקדח .25 בירידי נשק. <b>ההפרה הזו היא שאפשרה את המעצר</b> ב־27 בנובמבר, לפני שהראיות הבליסטיות בכלל היו בידיים.`},
+    {k:'arsenal', art:'arsenal', t:'18 כלי נשק', s:'ראיה 10',
+     p:'כולם נקנו מאותו עמית לעבודה.',
+     b:`דילון רכש <b>18 כלי נשק</b> מעמית לעבודה שהחזיק רישיון סוחר נשק פדרלי — ביניהם ארבעה רובי .30 ושני רובי מאוזר.<br><br>שני המאוזרים הם מהסוג ששימש בארבע מתוך חמש הרציחות.`},
+    {k:'ballistics', art:'ballistics', t:'הבליסטיקה', s:'ראיה 11',
+     p:'ההתאמה שסגרה את התיק.',
+     b:`אחרי שהרובה נמסר ב־4 בדצמבר 1992, מעבדות ה־FBI ביצעו השוואה בליסטית מול הקליעים משתי זירות דיג:<br><br>· <b>גארי ברדלי</b> — התאמה מלאה<br>· <b>קלוד הוקינס</b> — התאמה של כ־90%<br><br>הראיה הזאת היא שהעבירה את התיק מ"חשד" ל"כתב אישום ברצח". בלי מכירת הרובה יום אחרי הרצח האחרון — ובלי סוחר נשק שקרא עיתון — לא בטוח שהתיק היה נסגר אי פעם.`},
+    {k:'gavel', art:'gavel', t:'עסקת הטיעון', s:'ראיה 12',
+     p:'165 שנה · הודאה תמורת החיים.',
+     b:`ב־<b>12 ביולי 1993</b>, בבית המשפט של מחוז נובל, הודה דילון בחמישה סעיפי רצח: דונלד ולינג, ג'יימי פקסטון, קווין לורינג, קלוד הוקינס וגארי ברדלי.<br><br><b>העונש:</b> חמישה מאסרי עולם רצופים, ללא זכאות לשחרור על תנאי במשך <b>165 שנה</b>.<br><br>הוא הודה <b>רק אחרי שעונש המוות ירד מהשולחן</b>. התובע המחוזי לוסיאן יאנג השלישי אמר שהעסקה היתה "הפתרון המעשי ביותר", אף שהעדיף עונש מוות. סנגורו רוג'ר סיננברג טען שללקוחו "יש חרטות מסוימות".<br><br>בבית המשפט אמר דילון: <i>"יש לי בעיות רציניות. אני משוגע. אני רוצה להרוג. אני רוצה להרוג."</i>`},
+    {k:'petition', art:'petition', t:'8,000 החתימות', s:'ראיה 13',
+     p:'תושבי אוהיו בחרו לו את הכלא.',
+     b:`יותר מ־<b>8,000</b> תושבי אוהיו חתמו על עצומות שדרשו שדילון יישלח דווקא ל־<b>Southern Ohio Correctional Facility</b> — כלא הביטחון המרבי הידוע לשמצה בלוקסוויל.<br><br>דילון חשש מהמקום הזה במפורש. המדינה נענתה לעצומה.`},
+    {k:'prison', art:'prison', t:'הסוף', s:'ראיה 14',
+     p:'21 באוקטובר 2011 · בן 61.',
+     b:`דילון מת ב־<b>21 באוקטובר 2011</b> במרכז הרפואי של שירות בתי הסוהר בקולומבוס, אוהיו, בגיל 61 — מסרטן, כשלושה שבועות אחרי שאושפז.<br><br>הוא מעולם לא הסביר את המניע מעבר לאותו משפט: <i>"הם פשוט היו שם."</i><br><br>ד"ר ג'פרי סמולדון, שראיין אותו, סבר שדילון <b>מסתיר מידע בכוונה</b>: <i>"אני חושב שהוא מתאפק כי הוא רוצה להישאר חידה."</i><br><br>הוא נחקר גם בחשד לירי בג'ון ג'וזף הרווט בפנסילבניה ב־1984 — וסירב לדבר על כך.`},
+    {k:'drawing', art:'drawing', img:'dillon-illustration', contain:true, wide:true, t:'האיור של מרי קרסין', s:'ראיה 15',
+     p:'תיעוד ויזואלי מהופעת הלייב.',
+     b:`מרי קרסין טיטו ליוותה את הסיפור בהופעת הלייב בתיעוד ויזואלי — איור אחד שמסכם את כל הפרק: הילדות, לוח המוות, ההצתות, חמש הרציחות עם התאריכים, המעצר, והמספר 165.<br><br>מאיה המליצה: <b>קודם להאזין לפרק, ואז להסתכל על האיור.</b><br><br>האיור המקורי פורסם בקבוצת הפייסבוק של הפודקאסט.`}
+  ],
+
+  watch:[
+    {t:'The FBI Files S1E3 — "Human Prey"', d:'הפרק הדוקומנטרי המלא על התיק (1998) · הערוץ הרשמי', u:'https://www.youtube.com/watch?v=UZlBN1WTj24', i:'yt', cost:'free', note:'אנגלית · 44 דק\''},
+    {t:'אותו פרק, ב־Tubi', d:'The FBI Files · עונה 1 פרק 3', u:'https://tubitv.com/tv-shows/16285/s01-e03-human-prey', i:'yt', cost:'ads', note:'אנגלית · ייתכן חסימה גיאוגרפית'},
+    {t:'העלאה חלופית ביוטיוב', d:'The FBI Files S01E03 — "Human Prey"', u:'https://www.youtube.com/watch?v=VJhsaIs38Mo', i:'yt', cost:'free', note:'אנגלית'},
+    {t:'Thomas Lee Dillon — The Roadside Shooter', d:'סרט דוקומנטרי עצמאי', u:'https://www.youtube.com/watch?v=9Rh0BCFLHSA', i:'yt', cost:'free', note:'אנגלית'},
+    {t:"L'affaire Thomas Dillon — 5 randonneurs tués", d:'דוקו צרפתי על התיק', u:'https://www.youtube.com/watch?v=lk9FsOl96Dw', i:'yt', cost:'free', note:'צרפתית'},
+    {t:'Famous FBI Cases: Ohio — DOUBLE EPISODE', d:'פרק כפול של The FBI Files, כולל תיק דילון', u:'https://www.youtube.com/watch?v=K107nsi-gaA', i:'yt', cost:'free', note:'אנגלית'},
+    {t:'"Human Prey" ב־IMDb', d:'פרטי הפרק הדוקומנטרי, 1998', u:'https://www.imdb.com/title/tt1188189/', i:'doc', cost:'info'}
+  ],
+  watchNote:'הפרק <b>"Human Prey"</b> של The FBI Files הוא התיעוד הוויזואלי המרכזי של התיק — והוא זמין <b>בחינם ובמלואו</b> ביוטיוב, בערוץ הרשמי של הסדרה. מומלץ להתחיל משם.',
+
+  links:[
+    {t:'הפרק המלא בספוטיפיי', d:'תכירו: תומאס דילון · עונה 5 פרק 1', u:'https://open.spotify.com/episode/2LmyCUQE4omZuJRwWK1Sb4', i:'sp'},
+    {t:'Wikipedia — Thomas Dillon', d:'עובדות יסוד, תאריכים ומקורות', u:'https://en.wikipedia.org/wiki/Thomas_Dillon', i:'doc'},
+    {t:'StrangeOutdoors — The Ohio Outdoorsmen Killer', d:'התיעוד המפורט ביותר: מכתבים, פרופיל, מעצר', u:'https://www.strangeoutdoors.com/true-crime-in-the-outdoors/ohio-outdoorsmen-killer', i:'doc'},
+    {t:"All That's Interesting — Hunter Of Humans", d:'סקירה עם ציטוטים מהמכתב', u:'https://allthatsinteresting.com/thomas-dillon', i:'doc'},
+    {t:'Grunge — המכתב לאם הקורבן', d:'המכתב האנונימי שנשלח למשפחת פקסטון', u:'https://www.grunge.com/1194190/outdoorsman-sniper-thomas-dillon-sent-a-horrifying-letter-to-the-mother-of-one-of-his-victims/', i:'doc'},
+    {t:'Times Leader — "Serial killer Thomas Dillon dies"', d:'הידיעה על מותו, 2011', u:'https://www.timesleaderonline.com/news/local-news/2011/10/serial-killer-thomas-dillon-dies/', i:'doc'},
+    {t:'Oxygen — "No Remorse"', d:'ראיונות וניתוח פסיכולוגי', u:'https://www.oxygen.com/twisted-killers/crime-news/serial-killer-thomas-dillon-had-no-remorse-for-shooting-ohio-men', i:'doc'},
+    {t:'WOOD TV — התיק שנפתח מחדש', d:'החשד לקשר לרצח הכפול במישיגן, 1990', u:'https://www.woodtv.com/news/target-8/alibis-ignored-could-ohio-serial-killer-be-behind-kalamazoo-co-double-homicide/', i:'doc'},
+    {t:'קבוצת הפייסבוק של הפודקאסט', d:'הפוסט המקורי, הקלסתרון והאיור של מרי קרסין', u:'https://www.facebook.com/groups/544416173867261/', i:'fb'}
+  ]
+};
+
+/* ================= סטיבן זליך ================= */
+const ZELICH = {
+  id:'zelich', name:'סטיבן זליך', short:'סטיבן זליך', en:'Steven M. Zelich',
+  alias:'רוצח המזוודות',
+  ep:'עונה 4 · פרק 9', epDate:'27 במאי 2025', spotify:'',
+  epUrl:'https://creators.spotify.com/pod/profile/maya-gazit/episodes/4---9-e33di3d',
+  heroKey:'zelich-court', heroArt:'police', caseLabel:'CASE FILE · WISCONSIN 2012–2014',
+  line:'שוטר לשעבר שמערכת שלמה בחרה לא לעצור. שנים של תלונות נשים בתיק האישי שלו נגמרו בהתפטרות מוסכמת במקום בכתב אישום. שלוש עשרה שנה אחר כך התגלו שתי מזוודות בצד כביש בוויסקונסין.',
+  stats:[ {n:2,l:'קורבנות'}, {n:70,l:'שנות מאסר'}, {n:22,l:'חודשים עם הגופה'} ],
+
+  facts:[
+    ['נולד','1961, ויסקונסין'],
+    ['שירות משטרתי','משטרת מקוון 1984–1989 · משטרת ווסט אליס פברואר 1989 – אוגוסט 2001'],
+    ['סיום השירות','התפטר באוגוסט 2001 בעקבות חקירה פנימית'],
+    ['עיסוק לאחר מכן','מאבטח בחברת Securitas במתקן של Johnson Controls (מ־2007)'],
+    ['כינוי ברשת','"mrhandcuffs" — בפורומי BDSM'],
+    ['נעצר','25 ביוני 2014, בביתו בווסט אליס'],
+    ['הרשעות','הריגה פזיזה מדרגה ראשונה (ויסקונסין) · רצח מדרגה שנייה (מינסוטה) · שני סעיפי הסתרת גופה'],
+    ['עונש כולל','70 שנה — 35 + 25 + 10'],
+    ['מצב','מרצה עונש; ב־2020 ביקש לחזור בו מהודאתו']
+  ],
+
+  story:[
+    {h:'"רציתי לתרום לקהילה"', t:`בראיון המיון למשטרה, סטיבן זליך סיפר שהוא רוצה להיות שוטר כדי לעזור לאחרים ולתרום לקהילה שבה הוא חי. הוא סיפר על אביו ג'ורג', שוטר בעצמו, שאליו הביט בהערצה כילד. מה שהוא לא סיפר — לפי הפרק — היה שהוא מחפש עבודה עם <b>כוח ושליטה</b>.<br><br>ב־1984 הוא התקבל למשטרת מקוון. ב־1989 הוא עבר למשטרת ווסט אליס, ויסקונסין.`},
+    {h:'תיק אישי מלא בתלונות', t:`התיק האישי שלו, שנחשף לתקשורת ביולי 2014, מתעד <b>שנים</b> של תלונות — כמעט כולן מנשים:<br><br>· ספרית שדיווחה שהוא ארב לה שוב ושוב בסמטאות ולא הפסיק גם אחרי שביקשה. כשעימתו אותו עם זה שהוא מפחיד אותה, הוא השיב שהוא <em>"אמור להפחיד אנשים"</em>.<br>· רקדנית במועדון חשפנות שדיווחה שהוא הזמין אותה לצאת <b>"אינספור פעמים, אולי מאות"</b> לאורך שמונה שנים.<br>· שימוש בסמכות: עצירות תנועה של רקדניות כדי להוציא מהן מספרי טלפון וכתובות.<br>· אישה אחת עברה דירה שלוש פעמים והחליפה למספר חסוי — והוא מצא אותה בכל פעם.`},
+    {h:'מאי 2001 — ההזדמנות שהוחמצה', t:`במאי 2001 הגיעה למשטרה תלונה חמורה במיוחד. עובדת מין דיווחה שזליך <b>לא נתן לה לצאת</b> מדירתו בווסט אליס, השליך אותה לרצפה וחנק אותה. היא סיפרה שהאמינה שהוא הולך להרוג אותה, ותיארה אותו במילה אחת: <em>"משוגע"</em>.<br><br>משטרת ווסט אליס <b>מעולם לא העבירה את התיק לפרקליטות המחוז</b>. במקום זה נחתמה הבנה: זליך יתפטר, והתיק לא יועבר להעמדה לדין. באוגוסט 2001 הוא הסיר את התג והלך הביתה — בלי הרשעה, בלי רישום פלילי, בלי שאף אחד ידע.`},
+    {h:'שתי נשים, שני מלונות', t:`אחרי המשטרה הוא עבד כמאבטח. ברשת הוא נקרא <b>"mrhandcuffs"</b> וחיפש בפורומי BDSM נשים שיסכימו לתפקיד הכנוע.<br><br><b>ג'ני גיימז</b>, בת 19 מקוטג' גרוב שבאורגון, הכירה אותו ב־2012. ב־28 באוגוסט 2012 היא נחנקה למוות במלון במחוז קנושה, ויסקונסין.<br><br><b>לורה סימונסון</b>, בת 37 מפארמינגטון שבמינסוטה, הכירה אותו בספטמבר 2013. בין ה־2 ל־3 בנובמבר 2013 היא נחנקה למוות במלון Microtel Inn ברוצ'סטר, מינסוטה.<br><br>זליך טען ששני המקרים היו <b>תאונות</b> שקרו במהלך משחקי חנק בהסכמה. מה שאינו שנוי במחלוקת הוא מה שהוא עשה אחר כך.`},
+    {h:'22 חודשים', t:`הוא לא התקשר למוקד. הוא הכניס את הגופות למזוודות והחזיק אותן — תחילה בבית, אחר כך בתא המטען של הרכב.<br><br>גופתה של ג'ני גיימז נשארה ברשותו <b>כשנה ועשרה חודשים</b>. בשלב מסוים הוא נסע לכביש כפרי בטאון אוף ג'נבה, מחוז וולוורת', והשליך את שתי המזוודות בשולי North Como Road.<br><br>ב־<b>5 ביוני 2014</b> עובד תחזוקה של הכביש מצא אותן.`},
+    {h:'איך הוא נתפס', t:`אחת הגופות זוהתה מהר יחסית דרך רשומות שיניים — <b>לורה סימונסון</b>, שדווחה כנעדרת בנובמבר הקודם. השנייה נשארה "ג'יין דו".<br><br>החקירה הובילה לזליך: לורה נראתה לאחרונה איתו. הוא נעצר ב־<b>25 ביוני 2014</b>. מהתקשורת נמסר שהוא המשיך להשתמש באתרי היכרויות גם אחרי שהמזוודות התגלו בחדשות.<br><br>הזיהוי של הקורבן השנייה הושלם ב־<b>28 ביוני 2014</b>: קלסתרון שפורסם הוביל למשפחתה, ורשומות שיניים ממרפאה בקוטג' גרוב אישרו — ג'ני גיימז, בת 19.`}
+  ],
+
+  quotes:[
+    {t:'הוא אמור להפחיד אנשים.', by:'סטיבן זליך', role:'תגובתו כשעימתו אותו עם תלונת הספרית'},
+    {t:'הוא לא נתן לי לצאת. הוא השליך אותי לרצפה וחנק אותי. חשבתי שהוא הולך להרוג אותי.', by:'המתלוננת מ־2001', role:'התלונה שלא הועברה לפרקליטות'},
+    {t:'הוא היה משוגע.', by:'המתלוננת מ־2001', role:'תיאור שנרשם בתיק'},
+    {t:'הוא הזמין אותי לצאת אינספור פעמים — אולי מאות — לאורך שמונה שנים.', by:'רקדנית במועדון', role:'מתוך התיק האישי במשטרת ווסט אליס'},
+    {t:'הוא הכיר אותן באינטרנט וחנק אותן למוות במהלך יחסי מין.', by:'מתוך כתב האישום', role:'כפי שדווח בתקשורת האמריקאית'},
+    {t:'לורה הייתה אמא. ג\'ני הייתה בת 19. שתיהן היו הרבה יותר משתי מזוודות בצד הדרך.', by:'הערת הארכיון', role:'לזכרן'}
+  ],
+
+  victims:[
+    {n:1, name:"ג'ני גיימז", en:'Jenny Gamez', age:19, f:1, from:"קוטג' גרוב, אורגון",
+     date:'28 באוגוסט 2012', county:'מחוז קנושה, ויסקונסין', act:'נחנקה למוות במלון',
+     photos:['gamez-1','gamez-2'], x:0, y:0,
+     d:`ג'ני הייתה בת <b>19</b>. היא גדלה בקוטג' גרוב שבאורגון וב־2012 נעדרה מבית אביה האומן. היא הכירה את זליך באינטרנט, בצ'אט BDSM.<br><br>ב־28 באוגוסט 2012 היא נחנקה למוות במלון במחוז קנושה, ויסקונסין. גופתה נשארה ברשותו של זליך <b>כמעט שנתיים</b>, עד שהושלכה בצד הדרך ביוני 2014.<br><br>במשך שלושה שבועות היא הייתה "ג'יין דו". קלסתרון שפורסם הוביל למשפחתה, ורשומות שיניים ממרפאה בעיר הולדתה אישרו את זהותה ב־<b>28 ביוני 2014</b>.`,
+     tags:['בת 19','זוהתה כג\'יין דו','22 חודשים עד הגילוי']},
+    {n:2, name:'לורה סימונסון', en:'Laura Simonson', age:37, f:1, from:'פארמינגטון, מינסוטה',
+     date:'2–3 בנובמבר 2013', county:"רוצ'סטר, מינסוטה", act:'נחנקה למוות במלון',
+     photos:['simonson-1','simonson-2'], x:0, y:0,
+     d:`לורה הייתה בת <b>37</b>, מפארמינגטון שבמינסוטה, ואם. היא הכירה את זליך ברשת בספטמבר 2013, ככל הנראה דרך אתר בונדאז'.<br><br>ב־2 בנובמבר 2013 היא נרשמה איתו למלון <b>Microtel Inn</b> ברוצ'סטר, מינסוטה. היא לא יצאה משם. היא דווחה כנעדרת באותו חודש.<br><br>כשנמצאה במזוודה ביוני 2014 היא הייתה עירומה למעט קולר, עם חבל סביב הצוואר וכדור־פה. היא זוהתה דרך רשומות שיניים — והזיהוי שלה הוא שהוביל את החוקרים ישירות לזליך.`,
+     tags:['בת 37','אם','הזיהוי שהוביל למעצר']}
+  ],
+
+  timeline:[
+    {y:'1961', t:'נולד בוויסקונסין', d:'אביו ג\'ורג\' היה שוטר.'},
+    {y:'1984', t:'מצטרף למשטרת מקוון', d:'שוטר סיור. בראיון המיון סיפר שהוא רוצה לעזור לקהילה.'},
+    {y:'1989', t:'עובר למשטרת ווסט אליס', d:'פברואר. שוטר סיור. כאן יצטברו התלונות.'},
+    {y:'שנות ה־90', t:'תלונות מצטברות', d:'מעקב אחרי ספרית, רקדנית שסירבה לו מאות פעמים, עצירות תנועה כדי להשיג פרטים אישיים של נשים.'},
+    {y:'2001', t:'התלונה שנקברה', d:'מאי. עובדת מין מתלוננת שכלא אותה בדירתו, השליך אותה לרצפה וחנק אותה. התיק לא הועבר לפרקליטות.'},
+    {y:'2001', t:'מתפטר בהסדר', d:'אוגוסט. מסיים 12 שנה בווסט אליס. בתמורה — לא מוגש כתב אישום.'},
+    {y:'2007', t:'מאבטח', d:'עובד ב־Securitas במתקן של Johnson Controls. ברשת הוא "mrhandcuffs".'},
+    {y:'2012', t:"רצח ג'ני גיימז", d:'28 באוגוסט · מלון במחוז קנושה, ויסקונסין. בת 19.', kill:true},
+    {y:'2013', t:'מכיר את לורה סימונסון', d:'ספטמבר. היכרות בצ\'אט בונדאז\'.'},
+    {y:'2013', t:'רצח לורה סימונסון', d:'2–3 בנובמבר · מלון Microtel Inn, רוצ\'סטר, מינסוטה. בת 37.', kill:true},
+    {y:'2014', t:'המזוודות מתגלות', d:'5 ביוני. עובד כביש מוצא שתי מזוודות בשולי North Como Road, טאון אוף ג\'נבה, מחוז וולוורת\'.'},
+    {y:'2014', t:'נעצר', d:'25 ביוני, בביתו בווסט אליס. תחילה בעוון הסתרת גופות; ערבות של מיליון דולר.'},
+    {y:'2014', t:"ג'ני גיימז מזוהה", d:'28 ביוני. קלסתרון הוביל למשפחתה; רשומות שיניים אישרו.'},
+    {y:'2016', t:'הודאה בוויסקונסין', d:'25 בינואר. מודה בהריגה פזיזה מדרגה ראשונה והסתרת גופה במחוז קנושה. במרץ נגזרים עליו 35 שנה.'},
+    {y:'2017', t:'הודאה במינסוטה', d:'פברואר. מודה ברצח מדרגה שנייה של לורה סימונסון. 25 שנה.'},
+    {y:'2017', t:'גזר הדין האחרון', d:'13 באוקטובר, בית המשפט המחוזי של וולוורת\'. עוד 10 שנים על הסתרת הגופות. סה"כ 70 שנה.'},
+    {y:'2020', t:'מבקש לחזור בו', d:'מגיש בקשה לבטל את ההודאה בטענה לייצוג משפטי כושל. בנובמבר 2020 בית המשפט לערעורים מחזיר את התיק לדיון הוכחות.'}
+  ],
+
+  evidence:[
+    {k:'suitcase', art:'suitcase', wide:true, t:'שתי המזוודות', s:'ראיה 01',
+     p:'North Como Road · 5 ביוני 2014.',
+     b:`שתי מזוודות בשולי כביש כפרי בטאון אוף ג'נבה, מחוז וולוורת', ויסקונסין. עובד תחזוקה של הכביש מצא אותן ב־<b>5 ביוני 2014</b>.<br><br>באחת נמצאה גופה כרוכה בחבל ומכוסה ניילון. בשנייה — אישה עירומה למעט קולר, עם חבל סביב הצוואר וכדור־פה.<br><br>זליך החזיק את המזוודות בביתו במשך חודשים, ולאחר מכן בתא המטען של רכבו, לפני שהשליך אותן. במקרה של ג'ני גיימז מדובר ב<b>כשנה ועשרה חודשים</b>.`},
+    {k:'file', art:'letter', t:'התיק האישי', s:'ראיה 02',
+     p:'שנים של תלונות — כמעט כולן מנשים.',
+     b:`התיק האישי של זליך במשטרת ווסט אליס נחשף לתקשורת ב־<b>9 ביולי 2014</b>, שבועיים אחרי מעצרו. הוא תיעד דפוס שנמשך שנים:<br><br>· <b>מעקב והטרדה</b> — ספרית דיווחה שהוא ארב לה שוב ושוב בסמטאות ולא הפסיק אחרי שביקשה.<br>· <b>חיזורים כפייתיים</b> — רקדנית במועדון חשפנות דיווחה שהוא הזמין אותה לצאת "אינספור פעמים, אולי מאות" לאורך שמונה שנים.<br>· <b>שימוש לרעה בסמכות</b> — עצירות תנועה של רקדניות כדי להוציא מהן טלפונים וכתובות.<br>· <b>איתור</b> — אישה שעברה דירה שלוש פעמים והחליפה למספר חסוי סיפרה שהוא מצא אותה בכל פעם.<br><br>כשעימתו אותו עם כך שהוא מפחיד את הספרית, זליך השיב שהוא <i>"אמור להפחיד אנשים"</i>.`},
+    {k:'2001', art:'police', t:'תלונת מאי 2001', s:'ראיה 03',
+     p:'התיק שמעולם לא הגיע לפרקליטות.',
+     b:`במאי 2001 דיווחה עובדת מין שזליך <b>לא נתן לה לצאת</b> מדירתו בווסט אליס, השליך אותה לרצפה וחנק אותה. היא סיפרה שהאמינה שהוא הולך להרוג אותה, ותיארה אותו כ<i>"משוגע"</i>.<br><br>משטרת ווסט אליס <b>לא העבירה את התיק לפרקליטות המחוז</b>. במקום זה נחתם הסדר: זליך יתפטר, ובתמורה לא יוגש כתב אישום.<br><br>באוגוסט 2001 הוא התפטר. אחת עשרה שנים אחר כך נהרגה ג'ני גיימז — בחנק.`},
+    {k:'handle', art:'handcuffs', t:'"mrhandcuffs"', s:'ראיה 04',
+     p:'הכינוי שבו חיפש שותפות ברשת.',
+     b:`בפורומי ואתרי BDSM השתמש זליך בכינוי <b>"mrhandcuffs"</b> וחיפש נשים שיסכימו לתפקיד הכנוע.<br><br>כך הוא הכיר את ג'ני גיימז ב־2012 ואת לורה סימונסון בספטמבר 2013 — שתיהן בצ'אטים מקוונים, שתיהן נסעו למלון לפגישה, שתיהן לא חזרו.<br><br>לפי הדיווחים בתקשורת, הוא <b>המשיך להשתמש באתרי היכרויות</b> גם אחרי שגילוי המזוודות פורסם בחדשות — עד למעצרו ב־25 ביוני 2014.`},
+    {k:'hotel', art:'hotel', t:'שני חדרי המלון', s:'ראיה 05',
+     p:'קנושה 2012 · רוצ\'סטר 2013.',
+     b:`<b>28 באוגוסט 2012</b> — מלון במחוז קנושה, ויסקונסין. ג'ני גיימז, בת 19, נחנקת למוות.<br><br><b>2 בנובמבר 2013</b> — לורה סימונסון, בת 37, נרשמת עם זליך למלון <b>Microtel Inn</b> ברוצ'סטר, מינסוטה. היא לא יוצאת משם.<br><br>שני המקומות הם מלונות רגילים על אם הדרך. זליך טען בשני המקרים ל<b>תאונה</b> במהלך משחק חנק בהסכמה — טענה שהובילה בסופו של דבר להרשעות בהריגה פזיזה וברצח מדרגה שנייה, ולא ברצח בכוונה תחילה.`},
+    {k:'dental', art:'dental', t:'הזיהוי', s:'ראיה 06',
+     p:'רשומות שיניים וקלסתרון.',
+     b:`<b>לורה סימונסון</b> זוהתה תוך ימים דרך רשומות שיניים — היא דווחה כנעדרת בנובמבר 2013, והזיהוי שלה הוא שהוביל את החוקרים ישירות לזליך.<br><br><b>ג'ני גיימז</b> נשארה "ג'יין דו" במשך שלושה שבועות. משטרת לייק ג'נבה פרסמה <b>קלסתרון</b> שהוביל בסופו של דבר למשפחתה באורגון. רשומות שיניים ממרפאה בקוטג' גרוב אישרו את הזיהוי ב־<b>28 ביוני 2014</b>.`},
+    {k:'claim', art:'crate', t:'עדות בת הזוג לשעבר', s:'ראיה 07',
+     p:'טענה חמורה — לא אומתה משפטית.',
+     b:`אחרי המעצר פנתה בת זוג לשעבר של זליך לתחנת FOX6 במילווקי וטענה טענות קשות על התנהגותו בדירה, בהן שימוש בארגז כלוב.<br><br><b>הערת הארכיון:</b> מדובר בעדות אישית שפורסמה בתקשורת ו<b>לא הוכחה בבית משפט</b>, ואינה חלק מכתבי האישום שבהם הורשע. היא מובאת כאן משום שדוברה בסיקור התיק — לא כעובדה מוכחת. הקישור לכתבה המקורית נמצא בלשונית "מקורות".`},
+    {k:'sentence', art:'scale', t:'70 השנים', s:'ראיה 08',
+     p:'שלושה גזרי דין, שלוש ערכאות.',
+     b:`התיק התפצל בין שלוש תביעות שונות:<br><br>· <b>מחוז קנושה, ויסקונסין</b> — 25 בינואר 2016 מודה בהריגה פזיזה מדרגה ראשונה והסתרת גופה (ג'ני גיימז). <b>35 שנה</b>.<br>· <b>מחוז אולמסטד, מינסוטה</b> — פברואר 2017 מודה ברצח מדרגה שנייה (לורה סימונסון). <b>25 שנה</b>.<br>· <b>מחוז וולוורת', ויסקונסין</b> — 13 באוקטובר 2017, שני סעיפי הסתרת גופה. <b>10 שנים</b> נוספות.<br><br>סה"כ <b>70 שנה</b>. לאור גילו, מדובר בפועל במאסר עולם.`},
+    {k:'appeal', art:'gavel', t:'הבקשה לחזור בו', s:'ראיה 09',
+     p:'2020 — התיק עדיין לא באמת סגור.',
+     b:`ב־2020 הגיש זליך בקשה לבטל את הודאתו, בטענה לייצוג משפטי כושל.<br><br>בנובמבר 2020 החזיר בית המשפט לערעורים של ויסקונסין את התיק לערכאה הנמוכה לצורך <b>דיון הוכחות</b> בטענה.<br><br>המשמעות המעשית: גם אחרי שלושה גזרי דין, ההודאה שעליה נשען חלק מהתיק עדיין נמצאת תחת מחלוקת משפטית.`}
+  ],
+
+  watch:[
+    {t:'"He kept a girl for 7 years…" — ראיון FOX6', d:'בת זוג לשעבר של זליך, כתבה עם וידאו', u:'https://www.fox6now.com/news/zelichs-former-girlfriend-shares-shocking-information-he-kept-a-girl-for-7-years-in-his-apartment-in-this-crate', i:'yt', cost:'free', note:'אנגלית'},
+    {t:'CBS News — Suitcase Murders', d:'סיקור חדשותי מלא של התיק, כולל קטעי וידאו', u:'https://www.cbsnews.com/news/former-wisconsin-cop-charged-in-suitcase-murders/', i:'yt', cost:'free', note:'אנגלית'},
+    {t:'Serial Killers — "The Suitcase Killer" (2 חלקים)', d:'פודקאסט Parcast, 2021', u:'https://open.spotify.com/search/The%20Suitcase%20Killer%20Steven%20Zelich', i:'pod', cost:'free', note:'אנגלית'},
+    {t:'Our True Crime Podcast · פרק 191', d:'"The Suitcase Killer: Steven Zelich", 2022', u:'https://open.spotify.com/episode/4DzeNPtUzVbwZHlMydnJLP', i:'pod', cost:'free', note:'אנגלית'}
+  ],
+  watchNote:'על התיק של זליך <b>לא נעשה סרט דוקומנטרי ייעודי</b> נכון להיום. מה שקיים הוא סיקור חדשותי מצולם (FOX6, CBS, WISN) ופרקי פודקאסט. אם וכאשר יצא דוקו — הוא יתווסף כאן.',
+
+  links:[
+    {t:'Wikipedia — Steven Zelich', d:'עובדות יסוד, תאריכים ומקורות', u:'https://en.wikipedia.org/wiki/Steven_Zelich', i:'doc'},
+    {t:'FOX6 — התיק האישי במשטרת ווסט אליס', d:'שנות התלונות נגדו, כולל תלונת 2001', u:'https://fox6now.com/2014/07/09/personnel-file-out-of-west-allis-pd-shows-years-of-allegations-against-steven-zelich-from-women', i:'doc'},
+    {t:'CBS News — זיהוי הקורבן השנייה', d:"ג'ני גיימז מזוהה דרך רשומות שיניים", u:'https://www.cbsnews.com/news/second-victim-in-suitcase-murders-may-be-missing-wis-woman/', i:'doc'},
+    {t:'CBS News — "killed 2 during rough sex"', d:'גרסת זליך כפי שנמסרה לחוקרים', u:'https://www.cbsnews.com/news/cop-suitcase-murder-suspect-said-he-killed-2-during-rough-sex/', i:'doc'},
+    {t:'Fox News — התפטר כדי להימנע מהעמדה לדין', d:'הרשומות על הסדר הפרישה מ־2001', u:'https://www.foxnews.com/us/records-ex-police-officer-suspected-in-wisconsin-suitcase-deaths-resigned-to-avoid-discipline', i:'doc'},
+    {t:'NBC Washington — גזר הדין', d:'35 שנה על מותה של ג\'ני גיימז', u:'https://www.nbcwashington.com/news/national-international/ex-officer-sentenced-for-killing-woman-dumping-body/1992697/', i:'doc'},
+    {t:'WMTV — גזר הדין האחרון, אוקטובר 2017', d:'10 שנים נוספות על הסתרת הגופות', u:'https://www.wmtv15news.com/content/news/Zelich-sentenced-for-hiding-bodies-in-suitcases-450859543.html', i:'doc'},
+    {t:'FOX6 — הבקשה לבטל את ההודאה', d:'2020, בית המשפט לערעורים', u:'https://www.fox6now.com/news/court-ex-west-allis-officer-can-try-to-rescind-plea-in-suitcase-death', i:'doc'},
+    {t:'קבוצת הפייסבוק של הפודקאסט', d:'הפוסט המקורי והראיון עם ג\'יימי בייטס בתגובות', u:'https://www.facebook.com/groups/544416173867261/', i:'fb'}
+  ]
+};
+
+const DB = { dillon: DILLON, zelich: ZELICH };
+
+/* ---------- ICONS ---------- */
+const IC = {
+  chev:'<svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>',
+  arrow:'<svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>',
+  ext:'<svg viewBox="0 0 24 24"><path d="M9 6l-6 6 6 6"/></svg>',
+  file:'<svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>',
+  users:'<svg viewBox="0 0 24 24"><path d="M17 20v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9.5" cy="7" r="4"/><path d="M22 20v-2a4 4 0 0 0-3-3.9"/></svg>',
+  cam:'<svg viewBox="0 0 24 24"><path d="M3 8a2 2 0 0 1 2-2h2l1.5-2h7L17 6h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="4"/></svg>',
+  clock:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+  link:'<svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>',
+  yt:'<svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="4"/><path d="M10 9.5l5 2.5-5 2.5z"/></svg>',
+  sp:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M7.5 9.5c3-1 7-.7 9.5.8M8 13c2.4-.8 5.5-.5 7.5.8M8.6 16c1.9-.6 4.2-.4 5.8.6"/></svg>',
+  tv:'<svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="13" rx="2"/><path d="M8 3l4 3 4-3"/></svg>',
+  doc:'<svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h8l6 6v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>',
+  play:'<svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg>',
+  fb:'<svg viewBox="0 0 24 24"><path d="M14 8h3V4h-3a4 4 0 0 0-4 4v2H8v4h2v6h4v-6h3l1-4h-4V9a1 1 0 0 1 1-1z"/></svg>'
+};
+
+const COST = {
+  free: ['חינם', 'free'],
+  ads:  ['חינם עם פרסומות', 'ads'],
+  paid: ['בתשלום', 'paid'],
+  info: ['דף מידע', '']
+};
+
+/* ---------- HELPERS ---------- */
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+let io = null;
+function observe(root) {
+  if (!io) io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: .12, rootMargin: '0px 0px -6% 0px' });
+  root.querySelectorAll('.rv:not(.in),.case:not(.in),.tli:not(.in)').forEach(el => io.observe(el));
+}
+
+function countUp(el, target) {
+  const dur = 1100, t0 = performance.now();
+  const step = t => {
+    const p = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - p, 3);
+    el.textContent = Math.round(target * e).toLocaleString('he-IL');
+    if (p < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+/* ---------- HOME ---------- */
+let filterS = 'all', query = '';
+
+function renderChips() {
+  const seasons = [...new Set(EPISODES.map(e => e.s))].sort((a, b) => b - a);
+  $('#chips').innerHTML = `<button class="chip ${filterS === 'all' ? 'on' : ''}" data-s="all">הכל</button>` +
+    seasons.map(s => `<button class="chip ${filterS == s ? 'on' : ''}" data-s="${s}">עונה ${s}</button>`).join('') +
+    `<button class="chip ${filterS === 'ready' ? 'on' : ''}" data-s="ready">תיקים פתוחים</button>`;
+  $$('#chips .chip').forEach(c => c.onclick = () => { filterS = c.dataset.s; renderChips(); renderCases(); });
+}
+
+function renderCases() {
+  const list = EPISODES.filter(e => {
+    if (filterS === 'ready' && !e.ready) return false;
+    if (filterS !== 'all' && filterS !== 'ready' && e.s != filterS) return false;
+    if (query && !(e.name + ' עונה ' + e.s + ' פרק ' + e.e + ' ' + (e.tag || '')).includes(query)) return false;
+    return true;
+  });
+  $('#count').textContent = `${list.length} מתוך ${EPISODES.length}`;
+  const box = $('#cases');
+  if (!list.length) { box.innerHTML = `<div class="empty">לא נמצא תיק תואם.</div>`; return; }
+  box.innerHTML = list.map(e => `
+    <div class="case ${e.ready ? 'ready' : 'soon'}" ${e.ready ? `data-go="${e.id}"` : ''}>
+      <div class="avatar">${e.img ? photo(e.img, `<span class="init">${esc(e.name.trim()[0])}</span>`) : `<span class="init">${esc(e.name.trim()[0])}</span>`}</div>
+      <div class="case-body">
+        <h3>${esc(e.name)}</h3>
+        <div class="case-meta">
+          <span>עונה ${e.s} · פרק ${e.e}</span><i class="dot"></i><span>${e.date}</span>
+          ${e.dur ? `<i class="dot"></i><span>${e.dur}</span>` : ''}
+        </div>
+        <div style="margin-top:7px;display:flex;gap:5px;flex-wrap:wrap">
+          ${e.ready ? `<span class="badge">תיק פתוח</span>` : `<span class="badge n">בקרוב</span>`}
+          ${e.tag ? `<span class="badge g">${esc(e.tag)}</span>` : ''}
+        </div>
+      </div>
+      <div class="arrow">${IC.arrow}</div>
+    </div>`).join('');
+  $$('.case[data-go]').forEach(c => c.onclick = () => openKiller(c.dataset.go));
+  observe(box);
+}
+
+/* ---------- KILLER PAGE ---------- */
+function ohioMap(vics) {
+  const pins = vics.map(v => `
+    <g class="pin" data-v="${v.n}">
+      <circle class="halo" cx="${v.x}" cy="${v.y}" r="3">
+        <animate attributeName="r" values="3;9;3" dur="2.8s" begin="${v.n * .38}s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values=".8;0;.8" dur="2.8s" begin="${v.n * .38}s" repeatCount="indefinite"/>
+      </circle>
+      <circle class="core" cx="${v.x}" cy="${v.y}" r="3.4"/>
+      <text x="${v.x}" y="${v.y + 1.5}" text-anchor="middle" style="font-size:4px;fill:#fff;font-weight:900">${v.n}</text>
+    </g>`).join('');
+  const land = 'M18 27 L41 25 Q54 20 66 25 Q79 29 89 35 L89 62 Q86 69 80 72 Q75 76 72 82 Q64 87 55 88 Q47 92 40 90 Q31 85 25 78 Q21 74 18 73 Z';
+  return `<svg id="ohio" viewBox="0 0 100 100">
+    <defs><linearGradient id="lg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#241d15"/><stop offset="1" stop-color="#171208"/></linearGradient></defs>
+    <path class="land" d="${land}" fill="url(#lg)"/>
+    <path d="M41 25 Q54 20 66 25 Q79 29 89 35" fill="none" stroke="#2f5f7d" stroke-width="1.6" opacity=".8"/>
+    <path d="M43 21 Q56 16 68 20 Q78 24 86 29" fill="none" stroke="#2f5f7d" stroke-width=".6" opacity=".3"/>
+    <text x="60" y="15" text-anchor="middle" style="font-size:3.4px;fill:#4a7d9c;font-family:Heebo;letter-spacing:.3px">אגם אירי</text>
+    <text x="36" y="56" text-anchor="middle" style="font-size:6px;fill:#332b22;font-family:'Frank Ruhl Libre';font-weight:900;letter-spacing:1px">OHIO</text>
+    ${pins}
+  </svg>
+  <div class="vlegend">${vics.map(v => `<button data-lv="${v.n}"><span class="n">${v.n}</span>${esc(v.name)}</button>`).join('')}</div>`;
+}
+
+function openKiller(id) {
+  const k = DB[id]; if (!k) return;
+  $('#tb-k-title').textContent = k.name;
+
+  const html = `
+  <div class="khero">
+    <div class="khero-bg"></div>
+    <div class="mug">
+      <div class="scan"></div>
+      <span class="corner c1"></span><span class="corner c2"></span><span class="corner c3"></span><span class="corner c4"></span>
+      ${photo(k.heroKey, `<div style="width:150px;height:150px">${ART[k.heroArt] || ART.sketch}</div>`)}
+      <div class="caselabel">${esc(k.caseLabel || 'CASE FILE')}</div>
+    </div>
+    <h1 class="kname">${esc(k.name)}</h1>
+    <div><span class="kalias">${esc(k.alias)}</span></div>
+    <p class="kline">${k.line}</p>
+    <div class="stats">${k.stats.map(s => `<div class="stat"><div class="n" data-n="${s.n}">0</div><div class="l">${esc(s.l)}</div></div>`).join('')}</div>
+  </div>
+
+  <div class="tabs" id="tabs">
+    <button class="tab on" data-p="file">התיק</button>
+    <button class="tab" data-p="vic">הקורבנות</button>
+    <button class="tab" data-p="ev">ראיות</button>
+    <button class="tab" data-p="tl">ציר זמן</button>
+    <button class="tab" data-p="src">מקורות</button>
+  </div>
+
+  <div class="pad">
+
+    <!-- FILE -->
+    <div class="panel on" id="p-file">
+      <div class="block rv"><div class="block-h"><span class="ico">${IC.file}</span><h3>גיליון תיק</h3></div>
+        <div class="card"><div class="facts">${k.facts.map(f => `<div class="fact"><div class="k">${esc(f[0])}</div><div class="v">${f[1]}</div></div>`).join('')}</div></div>
+      </div>
+      ${k.story.map((s, i) => `
+      <div class="block rv"><div class="block-h"><span class="ico">${IC.file}</span><h3>${esc(s.h)}</h3></div>
+        <div class="card"><div class="prose"><p>${s.t}</p></div></div>
+        ${k.quotes[i] ? `<div class="quote rv"><p>${esc(k.quotes[i].t)}</p><div class="by">— <b>${esc(k.quotes[i].by)}</b> · ${esc(k.quotes[i].role)}</div></div>` : ''}
+      </div>`).join('')}
+      <div class="block rv">
+        <div class="quote"><p>${esc(k.quotes[5].t)}</p><div class="by">— <b>${esc(k.quotes[5].by)}</b> · ${esc(k.quotes[5].role)}</div></div>
+      </div>
+      <div class="note"><b>הערה על דיוק.</b> כל עובדה בעמוד הזה מגובה במקורות המופיעים בלשונית "מקורות". במקרים שבהם מקורות שונים חלוקים (למשל מספר ההצתות המדויק) — מוצגים שני הנתונים.</div>
+    </div>
+
+    <!-- VICTIMS -->
+    <div class="panel" id="p-vic">
+      ${k.map === 'ohio' ? `<div class="block rv"><div class="block-h"><span class="ico">${IC.users}</span><h3>מפת הזירות</h3></div>
+        <div class="mapwrap"><span class="lbl">EAST-CENTRAL OHIO</span>${ohioMap(k.victims)}
+          <div style="font-size:11px;color:var(--muted2);text-align:center;padding:4px 6px 2px;font-weight:300">לחצו על נקודה כדי לפתוח את התיק של הקורבן · המפה סכמטית</div>
+        </div>
+      </div>` : ''}
+      <div class="block rv"><div class="block-h"><span class="ico">${IC.users}</span><h3>${k.victims.length === 5 ? 'חמשת הקורבנות' : k.victims.length === 2 ? 'שתי הקורבנות' : 'הקורבנות'}</h3></div>
+        <div class="vgrid">${k.victims.map(v => `
+          <div class="victim" id="vic-${v.n}">
+            <div class="vhead">
+              <div class="vnum">${v.n}</div>
+              <div class="t"><h4>${esc(v.name)}</h4><div class="m">${v.f ? 'בת' : 'בן'} ${v.age} · ${esc(v.from)}</div></div>
+              <div class="vchev">${IC.chev}</div>
+            </div>
+            <div class="vbody"><div class="vbody-in">
+              ${v.photos && v.photos.length ? `<div class="${v.photos.length > 1 ? 'vshots' : ''}">${v.photos.map(pk => `<div class="vphoto">${photo(pk, `<div style="width:78px;height:78px;opacity:.55">${ART.portrait}</div>`)}<span class="cap">${esc(v.name)}</span></div>`).join('')}</div>` : ''}
+              <div class="vtags">
+                <span class="vtag">${esc(v.date)}</span>
+                <span class="vtag">${esc(v.county)}</span>
+                <span class="vtag">${esc(v.act)}</span>
+              </div>
+              <div class="prose" style="font-size:14px"><p>${v.d}</p></div>
+              <div class="vtags" style="margin-top:12px;margin-bottom:0">${v.tags.map(t => `<span class="vtag" style="border-color:rgba(193,18,31,.3);color:#ff9c9c">${esc(t)}</span>`).join('')}</div>
+              <div style="font-size:10.5px;color:var(--muted2);margin-top:10px;letter-spacing:.05em">${esc(v.en)}</div>
+            </div></div>
+          </div>`).join('')}</div>
+      </div>
+    </div>
+
+    <!-- EVIDENCE -->
+    <div class="panel" id="p-ev">
+      <div class="block rv"><div class="block-h"><span class="ico">${IC.cam}</span><h3>קלסר הראיות</h3></div>
+        <div class="evgrid">${k.evidence.map((e, i) => `
+          <button class="ev ${e.wide ? 'wide' : ''}" data-ev="${i}">
+            <div class="ev-vis"><span class="ev-stamp">${esc(e.s)}</span>${e.img ? photo(e.img, ART[e.art] || ART.letter, { contain: e.contain }) : (ART[e.art] || ART.letter)}</div>
+            <div class="ev-txt"><h5>${esc(e.t)}</h5><p>${esc(e.p)}</p></div>
+          </button>`).join('')}</div>
+        <div class="note"><b>תמונות אמיתיות.</b> האיורים כאן הם המחשות סגנוניות שנוצרו לאפליקציה. הקלסתרון המקורי, תמונות הקורבנות והאיור של מרי קרסין זמינים דרך הקישורים בלשונית "מקורות".</div>
+      </div>
+    </div>
+
+    <!-- TIMELINE -->
+    <div class="panel" id="p-tl">
+      <div class="block rv"><div class="block-h"><span class="ico">${IC.clock}</span><h3>ציר זמן · 1950–2023</h3></div>
+        <div class="tl">${k.timeline.map(t => `
+          <div class="tli ${t.kill ? 'kill' : ''}">
+            <div class="yr">${esc(t.y)}</div>
+            <div class="tt">${esc(t.t)}</div>
+            <div class="td">${esc(t.d)}</div>
+          </div>`).join('')}</div>
+      </div>
+    </div>
+
+    <!-- SOURCES -->
+    <div class="panel" id="p-src">
+      ${k.watch && k.watch.length ? `<div class="block rv"><div class="block-h"><span class="ico">${IC.cam}</span><h3>סרטים ודוקו</h3></div>
+        <div class="watch">${k.watch.map(w => `
+          <a class="wcard" href="${w.u}" target="_blank" rel="noopener">
+            <div class="wthumb ${w.i === 'doc' ? 'doc' : w.i === 'pod' ? 'pod' : ''}">${w.i === 'yt' ? IC.play : w.i === 'pod' ? IC.sp : IC.doc}</div>
+            <div class="wbody">
+              <h5>${esc(w.t)}</h5><p>${esc(w.d)}</p>
+              <div class="wtags">
+                <span class="wtag ${COST[w.cost] ? COST[w.cost][1] : ''}">${COST[w.cost] ? COST[w.cost][0] : 'לא ידוע'}</span>
+                ${w.note ? `<span class="wtag">${esc(w.note)}</span>` : ''}
+              </div>
+            </div>
+          </a>`).join('')}</div>
+        ${k.watchNote ? `<div class="note">${k.watchNote}</div>` : ''}
+      </div>` : ''}
+      <div class="block rv"><div class="block-h"><span class="ico">${IC.link}</span><h3>מקורות לקריאה</h3></div>
+        <div class="links">${k.links.map(l => `
+          <a class="lnk" href="${l.u}" target="_blank" rel="noopener">
+            <div class="li ${l.i === 'yt' ? 'yt' : l.i === 'sp' ? 'sp' : ''}">${IC[l.i] || IC.doc}</div>
+            <div class="lt"><h5>${esc(l.t)}</h5><p>${esc(l.d)}</p></div>
+            <div class="go">${IC.ext}</div>
+          </a>`).join('')}</div>
+        <div class="note">הארכיון הזה הוא פרויקט מחווה של מאזינים. הוא אינו מסונף לפודקאסט רצח ואינו מחליף אותו — <b>הוא נועד לתת מקום אחד לכל מה שדובר בפרק</b>. התוכן המקורי, המחקר והעריכה שייכים למאיה גזית ושי מגל.</div>
+      </div>
+    </div>
+
+  </div>`;
+
+  $('#k-content').innerHTML = html;
+  showView('#v-killer');
+
+  // stats
+  $$('#v-killer .stat .n').forEach(el => countUp(el, +el.dataset.n));
+
+  // tabs
+  $$('#tabs .tab').forEach(t => t.onclick = () => {
+    $$('#tabs .tab').forEach(x => x.classList.remove('on')); t.classList.add('on');
+    $$('#v-killer .panel').forEach(p => p.classList.remove('on'));
+    const p = $('#p-' + t.dataset.p); p.classList.add('on');
+    observe(p);
+    window.scrollTo({ top: $('#tabs').offsetTop - 60, behavior: 'smooth' });
+  });
+
+  // victims accordion
+  $$('#v-killer .victim').forEach(v => {
+    v.querySelector('.vhead').onclick = () => {
+      const b = v.querySelector('.vbody'), open = v.classList.contains('open');
+      $$('#v-killer .victim').forEach(o => { o.classList.remove('open'); o.querySelector('.vbody').style.maxHeight = 0; });
+      if (!open) { v.classList.add('open'); b.style.maxHeight = b.scrollHeight + 'px'; }
+    };
+  });
+
+  // map pins + legend
+  const jump = n => {
+    const v = $('#vic-' + n);
+    if (!v.classList.contains('open')) v.querySelector('.vhead').click();
+    v.classList.add('hl'); setTimeout(() => v.classList.remove('hl'), 1300);
+    setTimeout(() => v.scrollIntoView({ behavior: 'smooth', block: 'center' }), 60);
+  };
+  $$('#ohio .pin').forEach(p => p.onclick = () => jump(p.dataset.v));
+  $$('.vlegend button').forEach(b => b.onclick = () => jump(b.dataset.lv));
+
+  // evidence sheet
+  $$('#v-killer .ev').forEach(b => b.onclick = () => openSheet(k.evidence[+b.dataset.ev]));
+
+  // player
+  const pl = $('#player');
+  pl.classList.add('on'); pl.classList.remove('open');
+  $('#pl-title').textContent = 'תכירו: ' + k.short;
+  $('#pl-sub').textContent = k.ep + ' · ' + k.epDate;
+  const btn = $('#pl-toggle');
+  if (k.spotify) {
+    $('#pl-frame').dataset.src = `https://open.spotify.com/embed/episode/${k.spotify}?utm_source=generator&theme=0`;
+    btn.dataset.url = ''; btn.textContent = 'האזן לפרק';
+  } else {
+    $('#pl-frame').dataset.src = ''; $('#pl-frame').src = '';
+    btn.dataset.url = k.epUrl || ''; btn.textContent = 'פתח בספוטיפיי';
+  }
+
+  observe($('#v-killer'));
+}
+
+/* ---------- SHEET ---------- */
+function openSheet(e) {
+  $('#sheet-body').innerHTML = `
+    <div class="grab"></div>
+    <div class="big-vis">${e.img ? photo(e.img, ART[e.art] || ART.letter, { contain: true }) : (ART[e.art] || ART.letter)}<span class="ev-stamp" style="top:12px;inset-inline-start:12px">${esc(e.s)}</span></div>
+    <h4>${esc(e.t)}</h4>
+    <div class="sub">${esc(e.p)}</div>
+    <div class="prose">${e.b}</div>
+    <div style="height:8px"></div>`;
+  $('#sheet').classList.add('on');
+  document.body.style.overflow = 'hidden';
+}
+function closeSheet() { $('#sheet').classList.remove('on'); document.body.style.overflow = ''; }
+
+/* ---------- NAV ---------- */
+function showView(sel) {
+  $$('.view').forEach(v => v.classList.remove('on', 'back'));
+  $(sel).classList.add('on');
+  window.scrollTo(0, 0);
+}
+function goHome() {
+  $$('.view').forEach(v => v.classList.remove('on', 'back'));
+  const h = $('#v-home'); h.classList.add('on', 'back');
+  $('#player').classList.remove('on', 'open');
+  $('#pl-frame').src = '';
+  window.scrollTo(0, 0);
+  history.replaceState({}, '', location.pathname);
+}
+
+/* ---------- INIT ---------- */
+renderChips(); renderCases();
+$('#q').oninput = ev => { query = ev.target.value.trim(); renderCases(); };
+$('#back').onclick = goHome;
+$('#sheet .scrim').onclick = closeSheet;
+$('#pl-toggle').onclick = () => {
+  const pl = $('#player'), f = $('#pl-frame');
+  if ($('#pl-toggle').dataset.url) { window.open($('#pl-toggle').dataset.url, '_blank', 'noopener'); return; }
+  if (!pl.classList.contains('open')) { if (!f.src) f.src = f.dataset.src; pl.classList.add('open'); $('#pl-toggle').textContent = 'סגור'; }
+  else { pl.classList.remove('open'); $('#pl-toggle').textContent = 'האזן לפרק'; }
+};
+
+let lastY = 0;
+addEventListener('scroll', () => {
+  const y = scrollY;
+  $$('.topbar').forEach(t => t.classList.toggle('solid', y > 70));
+  const pl = $('#player');
+  if (pl.classList.contains('on') && !pl.classList.contains('open')) pl.classList.toggle('hide', y > lastY && y > 220);
+  lastY = y;
+}, { passive: true });
+
+addEventListener('keydown', e => { if (e.key === 'Escape') { if ($('#sheet').classList.contains('on')) closeSheet(); else if ($('#v-killer').classList.contains('on')) goHome(); } });
+
+// deep link ?case=dillon
+const qp = new URLSearchParams(location.search).get('case');
+if (qp && DB[qp]) openKiller(qp);
+observe(document);
+
+</script>
+</body>
+</html>
