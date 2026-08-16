@@ -188,7 +188,7 @@ function media(key, fallbackHTML, o) {
   o = o || {};
   const m = MEDIA[key];
   if (!m) return fallbackHTML || '';
-  return `<div class="phwrap media noimg${o.contain ? ' contain' : ''}${key.startsWith('map-') ? ' is-map' : ''}" data-media="${key}">
+  return `<div class="phwrap media noimg${o.crop ? ' crop' : ''}${key.startsWith('map-') ? ' is-map' : ''}" data-media="${key}">
     <div class="fb">${fallbackHTML || ''}</div></div>`;
 }
 
@@ -200,6 +200,8 @@ function hydrateMedia(root) {
     if (!rec) return;
     el.dataset.filled = '1';
     const cap = (MEDIA[el.dataset.media] && MEDIA[el.dataset.media].cap) || '';
+    const bg = document.createElement('div');
+    bg.className = 'ph-bg'; bg.style.backgroundImage = `url('${rec.src}')`;
     const img = document.createElement('img');
     img.loading = 'lazy'; img.decoding = 'async'; img.alt = cap;
     img.className = 'zoomable';
@@ -218,6 +220,7 @@ function hydrateMedia(root) {
     img.onerror = () => { img.remove(); el.dataset.filled = ''; };
     img.src = rec.src;
     el.insertBefore(img, el.firstChild);
+    el.insertBefore(bg, el.firstChild);
   });
 }
 
@@ -238,6 +241,55 @@ function creditsHTML(keys) {
     <div class="note">כל התמונות שמוצגות בתיק הזה מגיעות מ־<b>ויקישיתוף</b> ומפורסמות ברישיון חופשי או בנחלת הכלל. לחיצה על שורה פותחת את דף הקובץ המקורי עם פרטי הרישיון המלאים.</div>
   </div>`;
 }
+
+
+/* ---------- ANALYTICS (עדין, ללא עוגיות, ללא צד שלישי) ---------- */
+let _newVisitor = false;
+try {
+  if (!localStorage.getItem('retzach.seen')) { localStorage.setItem('retzach.seen', '1'); _newVisitor = true; }
+} catch (e) {}
+function track(path) {
+  try {
+    const l = JSON.parse(localStorage.getItem('retzach.hits') || '{}');
+    l[path] = (l[path] || 0) + 1;
+    localStorage.setItem('retzach.hits', JSON.stringify(l));
+    if (_newVisitor) localStorage.setItem('retzach.vis', String((+localStorage.getItem('retzach.vis') || 0) + 1));
+  } catch (e) {}
+  try {
+    const body = JSON.stringify({ p: path, n: _newVisitor });
+    _newVisitor = false;
+    if (navigator.sendBeacon) navigator.sendBeacon('/api/track', new Blob([body], { type: 'application/json' }));
+    else fetch('/api/track', { method: 'POST', body, keepalive: true, headers: { 'Content-Type': 'application/json' } }).catch(() => {});
+  } catch (e) {}
+}
+
+/* ---------- ADMIN (נסתר) ---------- */
+function loadAdmin() {
+  if (window.openAdmin) return window.openAdmin();
+  window.__adminWanted = true;
+  const sc = document.createElement('script');
+  sc.src = '/assets/admin.js?v=6'; document.head.appendChild(sc);
+}
+addEventListener('keydown', e => {
+  if (e.ctrlKey && e.shiftKey && (e.key === 'A' || e.key === 'a')) { e.preventDefault(); loadAdmin(); }
+});
+if (/[?&]admin\b/.test(location.search)) setTimeout(loadAdmin, 300);
+(function () {                       // שבע לחיצות על תג הגרסה
+  let n = 0, t = 0;
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.tape')) return;
+    const now = Date.now(); n = now - t < 900 ? n + 1 : 1; t = now;
+    if (n >= 7) { n = 0; loadAdmin(); }
+  });
+})();
+
+/* ---------- תמונות שהוזנו בלוח הבקרה ---------- */
+(function () {
+  let custom = {};
+  try { custom = JSON.parse(localStorage.getItem('retzach.custom') || '{}'); } catch (e) {}
+  const merged = Object.assign({}, window.CUSTOM_IMAGES || {}, custom);
+  Object.keys(merged).forEach(k => { if (merged[k]) IMG[k] = merged[k]; });
+})();
 
 /* ---------- BRAND ---------- */
 const BRAND = {
@@ -300,6 +352,26 @@ function openAbout() {
       <p>תיק נפתח רק אחרי שהוא מתועד במלואו. עד אז הוא מסומן <b>"בקרוב"</b>.</p>
     </div>
 
+
+    <div class="ab-block">
+      <h5>מי עומד מאחורי זה</h5>
+      <p>מאחורי הממשק הנקי של הארכיון עומדת <b>רשת מחקר אנושית</b>. מחקר על תיק יכול להתחיל בשיחה — עם עיתונאי, עם אדם מהתחום, עם מי שהיה שם, עם ארכיונאי. לצוות של <b>DUBEL TEAM</b> יש גישה למגוון נקודות מבט ומקורות.</p>
+      <p>ובכל זאת: <b>קשרים אישיים אינם ראיה.</b></p>
+      <div class="sep-grid">
+        <div class="sep"><b>קצה חוט</b><span>כיוון לבדיקה. לא נכנס לארכיון בפני עצמו.</span></div>
+        <div class="sep"><b>מקור</b><span>אדם או מסמך. נבדק מול מקורות נוספים.</span></div>
+        <div class="sep"><b>דעה</b><span>פרשנות. מסומנת ככזו, תמיד.</span></div>
+        <div class="sep v"><b>עובדה מאומתת</b><span>מתועדת, מקושרת, וניתנת לבדיקה.</span></div>
+      </div>
+      <p style="margin-top:12px">אנשים מספקים כיווני חקירה, הקשר ופרספקטיבה. <b>מקורות, תיעוד ואימות קובעים מה נכנס לארכיון.</b> ההפרדה הזאת נשמרת בכל תיק, גם כשהיא עולה בזמן ובעומק.</p>
+    </div>
+
+    <div class="ab-block">
+      <h5>מדיניות התוכן</h5>
+      <p>הארכיון אינו מפרסם תצלומי נתיחה, חומר מיני או תיעוד גרפי של קורבנות. חומר מזירת אירוע שיש בו ערך תיעודי מוצג <b>מטושטש, מאחורי אישור מפורש</b>. כשמאיה בחרה בפרק לא להציג משהו — הבחירה הזאת מכובדת גם כאן.</p>
+      <p>יש טעות? היא תתוקן ותסומן. תיקון אינו מבוכה — הוא חלק מהשיטה.</p>
+    </div>
+
     <div class="ab-block">
       <h5>מי בנה</h5>
       <p><b>DUBEL TEAM</b> — חברת אופרייטורס בהובלת מייסד, מבסיס באתונה. בונים ומריצים מוצרים, מותגים ותפעול — מאסטרטגיה ועד הדבר שעובד בפועל.</p>
@@ -330,8 +402,9 @@ function renderChips() {
   const seasons = [...new Set(EPISODES.map(e => e.s))].sort((a, b) => b - a);
   $('#chips').innerHTML = `<button class="chip ${filterS === 'all' ? 'on' : ''}" data-s="all">הכל</button>` +
     seasons.map(s => `<button class="chip ${filterS == s ? 'on' : ''}" data-s="${s}">עונה ${s}</button>`).join('') +
-    `<button class="chip ${filterS === 'ready' ? 'on' : ''}" data-s="ready">תיקים פתוחים</button>`;
+    `<button class="chip ${filterS === 'ready' ? 'on' : ''}" data-s="ready">תיקים סגורים</button>`;
   $$('#chips .chip').forEach(c => c.onclick = () => { filterS = c.dataset.s; renderChips(); renderCases();
+track('/');
 loadMedia().then(() => { hydrateMedia(document); }); });
 }
 
@@ -348,8 +421,8 @@ function renderCases() {
   box.innerHTML = list.map(e => `
     <div class="case ${e.ready ? 'ready' : 'soon'}" ${e.ready ? `data-go="${e.id}"` : ''}>
       <div class="avatar${e.ready ? ' wide' : ''}">${e.img
-        ? photo(e.img, (e.id && DB[e.id] && scene(DB[e.id].scene)) || `<span class="init">${esc(e.name.trim()[0])}</span>`)
-        : `<span class="init">${esc(e.name.trim()[0])}</span>`}</div>
+        ? photo(e.img, (e.id && DB[e.id] && scene(DB[e.id].scene)) || plateFor('portrait', e.e), { crop: 1 })
+        : (e.ready ? plateFor('portrait', e.e) : `<span class="init">${esc(e.name.trim()[0])}</span>`)}</div>
       <div class="case-body">
         <h3>${esc(e.name)}</h3>
         <div class="case-meta">
@@ -357,7 +430,7 @@ function renderCases() {
           ${e.dur ? `<i class="dot"></i><span>${e.dur}</span>` : ''}
         </div>
         <div style="margin-top:7px;display:flex;gap:5px;flex-wrap:wrap">
-          ${e.ready ? `<span class="badge">תיק פתוח</span>` : `<span class="badge n">בקרוב</span>`}
+          ${e.ready ? `<span class="badge">תיק סגור</span>` : `<span class="badge n">בקרוב</span>`}
           ${e.tag ? `<span class="badge g">${esc(e.tag)}</span>` : ''}
         </div>
       </div>
@@ -392,13 +465,116 @@ function ohioMap(vics) {
   <div class="vlegend">${vics.map(v => `<button data-lv="${v.n}"><span class="n">${v.n}</span>${esc(v.name)}</button>`).join('')}</div>`;
 }
 
+
+/* ---------- BRIEF CASE (תיק מתועד) ---------- */
+function openBrief(k, skipHistory) {
+  $('#tb-k-title').textContent = k.name;
+  document.title = k.name + ' · רצח · הארכיון';
+  if (!skipHistory) history.pushState({ id: k.id }, '', '?case=' + k.id);
+
+  const hero = (k.gal && k.gal[0] && !k.gal[0].sens) ? k.gal[0].k : null;
+  const gal  = k.gal || [];
+
+  $('#k-content').innerHTML = `
+  <div class="bwrap">
+    <div class="bhero">
+      ${hero ? `<div class="bhero-img">${photo(hero, plateFor('portrait'), {})}</div>` : ''}
+      <div class="bhero-t">
+        <div class="beyebrow">עונה ${k.s} · פרק ${k.e}${k.e2 ? '–' + k.e2 : ''}</div>
+        <h1 class="kname">${esc(k.name)}</h1>
+        ${k.alias ? `<div><span class="kalias">${esc(k.alias)}</span></div>` : ''}
+        <p class="kline">${esc(k.line)}</p>
+        <div class="bmeta"><span>${esc(k.en)}</span></div>
+      </div>
+    </div>
+
+    <div class="block rv"><div class="block-h"><span class="ico">${IC.mic}</span><h3>מהפרק · הפוסט של מאיה</h3></div>
+      <div class="bpost">${esc(k.post).replace(/\n/g, '<br>')}
+        <div class="bpost-src">ציטוט מדויק מהפוסט בקבוצת הפייסבוק של הפודקאסט</div>
+      </div>
+    </div>
+
+    <div class="block rv"><div class="block-h"><span class="ico">${IC.file}</span><h3>גיליון תיק</h3></div>
+      <div class="card"><div class="facts">${k.facts.map(f => `<div class="fact"><div class="k">${esc(f[0])}</div><div class="v">${esc(f[1])}</div></div>`).join('')}</div></div>
+    </div>
+
+    ${gal.length ? `<div class="block rv"><div class="block-h"><span class="ico">${IC.cam}</span><h3>תמונות מהתיק</h3></div>
+      <div class="gal">${gal.map((g, i) => `
+        <figure class="gtile${g.sens ? ' sens' : ''}">
+          ${photo(g.k, plateFor(['portrait','letter','witness'][i % 3], i))}
+          ${g.sens ? `<button class="sens-veil" type="button"><span>${IC.eyeoff}</span><b>תוכן רגיש</b><i>לחצו להצגה</i></button>` : ''}
+          <figcaption>${esc(g.c)}</figcaption>
+        </figure>`).join('')}</div>
+      <div class="note">התמונות באדיבות החומרים שפורסמו בקבוצת הפודקאסט. תמונות שסומנו כרגישות מוסתרות כברירת מחדל.</div>
+    </div>` : ''}
+
+    ${k.watch && k.watch.length ? `<div class="block rv"><div class="block-h"><span class="ico">${IC.cam}</span><h3>לצפייה</h3></div>
+      <div class="watch">${k.watch.map(w => `
+        <a class="wcard" href="${w.u}" target="_blank" rel="noopener">
+          <div class="wthumb">${IC.play}</div>
+          <div class="wbody"><h5>${esc(w.t)}</h5><p>${esc(w.d)}</p>
+          <div class="wtags"><span class="wtag ${COST[w.cost] ? COST[w.cost][1] : ''}">${COST[w.cost] ? COST[w.cost][0] : ''}</span>${w.note ? `<span class="wtag">${esc(w.note)}</span>` : ''}</div></div>
+        </a>`).join('')}</div></div>` : ''}
+
+    <div class="block rv"><div class="block-h"><span class="ico">${IC.link}</span><h3>מקורות</h3></div>
+      <div class="links">${(k.links || []).map(l => `
+        <a class="lnk" href="${l.u}" target="_blank" rel="noopener">
+          <div class="li">${IC.doc}</div>
+          <div class="lt"><h5>${esc(l.t)}</h5></div>
+          <div class="go">${IC.ext}</div>
+        </a>`).join('')}</div>
+      <div class="note"><b>תיק מתועד.</b> הפוסט מצוטט כלשונו. גיליון העובדות מבוסס על המקורות שלמעלה. תיק זה טרם עבר תיעוד מלא ברמת התיקים המורחבים — ראיות, קורבנות וציר זמן יתווספו.</div>
+    </div>
+
+    ${nextCase(k.id)}
+  </div>`;
+
+  showView('#v-killer');
+  bindCommon(k);
+  observe($('#v-killer'));
+  hydrateMedia($('#v-killer'));
+  $$('#v-killer .sens-veil').forEach(b => b.onclick = ev => {
+    ev.stopPropagation(); b.closest('.gtile').classList.add('shown'); b.remove();
+  });
+}
+
+/* משותף לשני סוגי התיקים */
+function bindCommon(k) {
+  const nc = $('#v-killer .nextcase');
+  if (nc) nc.onclick = () => openKiller(nc.dataset.next);
+  $$('#v-killer .phwrap img').forEach(im => {
+    if (im.dataset.lb) return; im.dataset.lb = '1'; im.classList.add('zoomable');
+    im.onclick = ev => {
+      const t = im.closest('.gtile, .vphoto, .mtile');
+      if (t && t.classList.contains('sens') && !t.classList.contains('shown')) return;
+      ev.stopPropagation();
+      const cap = t ? (t.querySelector('figcaption, .cap') || {}).textContent : '';
+      openLightbox(im.src, cap || '');
+    };
+  });
+  const pl = $('#player');
+  pl.classList.add('on'); pl.classList.remove('open');
+  $('#pl-title').textContent = 'תכירו: ' + (k.short || k.name);
+  $('#pl-sub').textContent = (k.ep || '') + (k.epDate ? ' · ' + k.epDate : '');
+  const btn = $('#pl-toggle');
+  if (k.spotify) {
+    $('#pl-frame').dataset.src = `https://open.spotify.com/embed/episode/${k.spotify}?utm_source=generator&theme=0`;
+    btn.dataset.url = ''; btn.textContent = 'האזן לפרק';
+  } else {
+    $('#pl-frame').dataset.src = ''; $('#pl-frame').src = '';
+    btn.dataset.url = k.epUrl || ''; btn.textContent = 'פתח בספוטיפיי';
+  }
+  track('case:' + k.id);
+}
+
+const IMGS_OF = id => { const e = EPISODES.find(x => x.id === id); return e && e.img; };
 function nextCase(currentId) {
   const ready = EPISODES.filter(e => e.ready && e.id);
   if (ready.length < 2) return '';
   const i = ready.findIndex(e => e.id === currentId);
   const n = ready[(i + 1) % ready.length];
   return `<button class="nextcase rv" data-next="${n.id}">
-    <div class="nx-thumb">${scene(DB[n.id] && DB[n.id].scene) || ''}</div>
+    <div class="nx-thumb">${scene(DB[n.id] && DB[n.id].scene) || photo(IMGS_OF(n.id), plateFor('portrait', n.e), { crop: 1 })}</div>
     <div class="nx-t"><span>התיק הבא בארכיון</span><h4>${esc(n.name)}</h4></div>
     <div class="nx-go">${IC.arrow}</div>
   </button>`;
@@ -406,6 +582,7 @@ function nextCase(currentId) {
 
 function openKiller(id, skipHistory) {
   const k = DB[id]; if (!k) return;
+  if (k.brief) return openBrief(k, skipHistory);
   $('#tb-k-title').textContent = k.name;
   document.title = k.name + ' · רצח · הארכיון';
   if (!skipHistory) history.pushState({ id }, '', '?case=' + id);
@@ -454,7 +631,7 @@ function openKiller(id, skipHistory) {
         <div class="quote"><p>${esc(k.quotes[5].t)}</p><div class="by">— <b>${esc(k.quotes[5].by)}</b> · ${esc(k.quotes[5].role)}</div></div>
       </div>
       ${k.gallery && k.gallery.length ? `<div class="block rv"><div class="block-h"><span class="ico">${IC.cam}</span><h3>המקומות שבתיק</h3></div>
-        <div class="gal">${k.gallery.map(mk => `<figure class="gtile">${media(mk, `<div style="width:64px;height:64px;opacity:.35">${ART.portrait}</div>`, { contain: mk.startsWith('map-') })}<figcaption>${esc((MEDIA[mk] || {}).cap || '')}</figcaption></figure>`).join('')}</div>
+        <div class="gal">${k.gallery.map(mk => `<figure class="gtile">${media(mk, plateFor('profile'), { contain: mk.startsWith('map-') })}<figcaption>${esc((MEDIA[mk] || {}).cap || '')}</figcaption></figure>`).join('')}</div>
         <div class="note">תמונות אמיתיות מוויקישיתוף, ברישיון חופשי. הן מראות את <b>המקומות</b> שבהם התיק התרחש — לא את המעורבים.</div>
       </div>` : ''}
       <div class="note"><b>הערה על דיוק.</b> כל עובדה בעמוד הזה מגובה במקורות המופיעים בלשונית "מקורות". במקרים שבהם מקורות שונים חלוקים (למשל מספר ההצתות המדויק) — מוצגים שני הנתונים.</div>
@@ -498,8 +675,8 @@ function openKiller(id, skipHistory) {
               <div class="vchev">${IC.chev}</div>
             </div>
             <div class="vbody"><div class="vbody-in">
-              ${v.photos && v.photos.length ? `<div class="${v.photos.length > 1 ? 'vshots' : ''}">${v.photos.map(pk => `<div class="vphoto">${photo(pk, `<div style="width:78px;height:78px;opacity:.55">${ART.portrait}</div>`)}<span class="cap">${esc(v.name)}</span></div>`).join('')}</div>` : ''}
-              ${v.media && v.media.length ? `<div class="mstrip">${v.media.map(mk => `<figure class="mtile">${media(mk, `<div style="width:56px;height:56px;opacity:.4">${ART.portrait}</div>`, { contain: mk.startsWith('map-') })}<figcaption>${esc((MEDIA[mk] || {}).cap || '')}</figcaption></figure>`).join('')}</div>` : ''}
+              ${v.photos && v.photos.length ? `<div class="${v.photos.length > 1 ? 'vshots' : ''}">${v.photos.map(pk => `<div class="vphoto">${photo(pk, portraitPlate(v.name, '', 'ink'))}<span class="cap">${esc(v.name)}</span></div>`).join('')}</div>` : ''}
+              ${v.media && v.media.length ? `<div class="mstrip">${v.media.map(mk => `<figure class="mtile">${media(mk, plateFor('profile'), { contain: mk.startsWith('map-') })}<figcaption>${esc((MEDIA[mk] || {}).cap || '')}</figcaption></figure>`).join('')}</div>` : ''}
               <div class="vtags">
                 <span class="vtag">${esc(v.date)}</span>
                 <span class="vtag">${esc(v.county)}</span>
@@ -520,7 +697,7 @@ function openKiller(id, skipHistory) {
           <button class="ev ${e.wide ? 'wide' : ''}" data-ev="${i}">
             <div class="ev-vis"><span class="ev-stamp">${esc(e.s)}</span>${e.img
               ? photo(e.img, ART[e.art] || ART.letter, { contain: e.contain })
-              : (e.media ? media(e.media, ART[e.art] || ART.letter, { contain: String(e.media).startsWith('map-') }) : (ART[e.art] || ART.letter))}</div>
+              : (e.media ? media(e.media, plateFor(e.art, i), { contain: String(e.media).startsWith('map-') }) : plateFor(e.art, i))}</div>
             <div class="ev-txt"><h5>${esc(e.t)}</h5><p>${esc(e.p)}</p></div>
           </button>`).join('')}</div>
         <div class="note"><b>תמונות אמיתיות.</b> האיורים כאן הם המחשות סגנוניות שנוצרו לאפליקציה. הקלסתרון המקורי, תמונות הקורבנות והאיור של מרי קרסין זמינים דרך הקישורים בלשונית "מקורות".</div>
@@ -609,29 +786,8 @@ function openKiller(id, skipHistory) {
   // evidence sheet
   $$('#v-killer .ev').forEach(b => b.onclick = () => openSheet(k.evidence[+b.dataset.ev]));
 
-  // next case
-  const nc = $('#v-killer .nextcase');
-  if (nc) nc.onclick = () => openKiller(nc.dataset.next);
 
-  // lightbox on any real photo
-  $$('#v-killer .phwrap img').forEach(im => {
-    im.classList.add('zoomable');
-    im.onclick = ev => { ev.stopPropagation(); openLightbox(im.src, im.closest('.vphoto') ? im.closest('.vphoto').querySelector('.cap')?.textContent : ''); };
-  });
-
-  // player
-  const pl = $('#player');
-  pl.classList.add('on'); pl.classList.remove('open');
-  $('#pl-title').textContent = 'תכירו: ' + k.short;
-  $('#pl-sub').textContent = k.ep + ' · ' + k.epDate;
-  const btn = $('#pl-toggle');
-  if (k.spotify) {
-    $('#pl-frame').dataset.src = `https://open.spotify.com/embed/episode/${k.spotify}?utm_source=generator&theme=0`;
-    btn.dataset.url = ''; btn.textContent = 'האזן לפרק';
-  } else {
-    $('#pl-frame').dataset.src = ''; $('#pl-frame').src = '';
-    btn.dataset.url = k.epUrl || ''; btn.textContent = 'פתח בספוטיפיי';
-  }
+  bindCommon(k);
 
   observe($('#v-killer'));
 
@@ -656,8 +812,8 @@ function openSheet(e) {
   $('#sheet-body').innerHTML = `
     <div class="grab"></div>
     <div class="big-vis">${e.img
-      ? photo(e.img, ART[e.art] || ART.letter, { contain: true })
-      : (e.media ? media(e.media, ART[e.art] || ART.letter, { contain: true }) : (ART[e.art] || ART.letter))}<span class="ev-stamp" style="top:12px;inset-inline-start:12px">${esc(e.s)}</span></div>
+      ? photo(e.img, plateFor(e.art), { contain: true })
+      : (e.media ? media(e.media, plateFor(e.art), { contain: true }) : plateFor(e.art))}<span class="ev-stamp" style="top:12px;inset-inline-start:12px">${esc(e.s)}</span></div>
     <h4>${esc(e.t)}</h4>
     <div class="sub">${esc(e.p)}</div>
     <div class="prose">${e.b}</div>
@@ -691,6 +847,7 @@ if (heroArt) {
   if (featured) heroArt.innerHTML = scene(DB[featured.id].scene, 'המחשה · יצירה מקורית');
 }
 renderChips(); renderCases();
+track('/');
 loadMedia().then(() => { hydrateMedia(document); });
 $('#q').oninput = ev => { query = ev.target.value.trim(); renderCases(); };
 $('#back').onclick = goHome;

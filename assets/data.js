@@ -19,9 +19,11 @@ const IMG = {
 };
 /* photo(key, fallbackSvg, {contain}) -> HTML */
 function photo(key, fb, o = {}) {
-  const src = IMG[key];
-  if (!src) return `<div class="phwrap noimg"><div class="fb">${fb || ''}</div></div>`;
-  return `<div class="phwrap${o.contain ? ' contain' : ''}">
+  if (!key) return `<div class="phwrap noimg"><div class="fb">${fb || ''}</div></div>`;
+  /* מפתח שאינו רשום ב-IMG נפתר אוטומטית ל-img/<key>.jpg */
+  const src = IMG[key] || ('img/' + key + '.jpg');
+  return `<div class="phwrap${o.crop ? ' crop' : ''}">
+    <div class="ph-bg" style="background-image:url('${src}')"></div>
     <img src="${src}" alt="" loading="lazy" onerror="this.closest('.phwrap').classList.add('noimg')">
     <div class="fb">${fb || ''}</div></div>`;
 }
@@ -208,17 +210,33 @@ const ART = {
 
 /* ---------- DATABASE ---------- */
 const EPISODES = [
-  { id:'dillon', s:5, e:1, name:'תומאס דילון', date:'10.09.2025', dur:'1:10', tag:'סניפר', ready:true,
-    img:'dillon-composite', teaser:'צייד חובב נשק שעולם הפנטזיה שלו הפך למסוכן יותר ויותר' },
-  { id:null, s:5, e:7, name:"בנג'מין גונזלס", date:'26.07.2026', dur:'1:02', tag:'', ready:false },
-  { id:null, s:5, e:6, name:'שרון קייני', date:'27.05.2026', dur:'1:11', tag:'', ready:false },
-  { id:null, s:5, e:5, name:"לארי ג'ין בל", date:'13.03.2026', dur:'1:02', tag:'חטיפה', ready:false },
-  { id:null, s:5, e:4, name:'טרי רסמוסן', date:'18.01.2026', dur:'1:15', tag:'זהויות', ready:false },
-  { id:null, s:5, e:3, name:'חואנה בארסה', date:'21.11.2025', dur:'0:59', tag:'מקסיקו', ready:false },
-  { id:null, s:5, e:2, name:'רוברט ברדלה', date:'03.10.2025', dur:'1:19', tag:'קנזס סיטי', ready:false },
-  { id:'zelich', s:4, e:9, name:'סטיבן זליך', date:'27.05.2025', dur:'0:59', tag:'שוטר', ready:true, img:'zelich-court' },
-  { id:null, s:4, e:8, name:'גלנון אנגלמן', date:'10.04.2025', dur:'1:10', tag:'רופא שיניים', ready:false },
-  { id:null, s:4, e:7, name:"לאונרד לייק וצ'ארלס אנג' · חלק ב", date:'09.02.2025', dur:'0:32', tag:'', ready:false }
+  {"id": null, "s": 5, "e": 7, "name": "בנג'מין גונזלס", "date": "26.07.2026", "dur": "1:02", "tag": "", "ready": false},
+  {"id": null, "s": 5, "e": 6, "name": "שרון קייני", "date": "27.05.2026", "dur": "1:11", "tag": "", "ready": false},
+  {"id": null, "s": 5, "e": 5, "name": "לארי ג'ין בל", "date": "13.03.2026", "dur": "1:02", "tag": "חטיפה", "ready": false},
+  {"id": null, "s": 5, "e": 4, "name": "טרי רסמוסן", "date": "18.01.2026", "dur": "1:15", "tag": "זהויות", "ready": false},
+  {"id": null, "s": 5, "e": 3, "name": "חואנה בארסה", "date": "21.11.2025", "dur": "0:59", "tag": "מקסיקו", "ready": false},
+  {"id": null, "s": 5, "e": 2, "name": "רוברט ברדלה", "date": "03.10.2025", "dur": "1:19", "tag": "קנזס סיטי", "ready": false},
+  {"id": "dillon", "s": 5, "e": 1, "name": "תומאס דילון", "date": "10.09.2025", "dur": "1:10", "tag": "סניפר", "ready": true, "img": "dillon-composite"},
+  {"id": "zelich", "s": 4, "e": 9, "name": "סטיבן זליך", "date": "27.05.2025", "dur": "0:59", "tag": "שוטר", "ready": true, "img": "zelich-court"},
+  {"id": null, "s": 4, "e": 8, "name": "גלנון אנגלמן", "date": "10.04.2025", "dur": "1:10", "tag": "רופא שיניים", "ready": false},
+  {"id": null, "s": 4, "e": 7, "name": "לאונרד לייק וצ'ארלס אנג' · חלק ב", "date": "09.02.2025", "dur": "0:32", "tag": "", "ready": false},
+  {"id": "grate", "s": 2, "e": 8, "name": "שון גרייט", "date": "", "dur": "", "tag": "אוהיו", "ready": true, "img": "grate-1"},
+  {"id": "kohlhepp", "s": 2, "e": 7, "name": "טוד קולהפ", "date": "", "dur": "", "tag": "אמזון", "ready": true},
+  {"id": "sowell", "s": 2, "e": 6, "name": "אנתוני סוול", "date": "", "dur": "", "tag": "קליבלנד", "ready": true, "img": "sowell-house-4"},
+  {"id": "conahan", "s": 2, "e": 5, "name": "דניאל קונהן", "date": "", "dur": "", "tag": "פלורידה", "ready": true, "img": "conahan-1"},
+  {"id": "khalil", "s": 2, "e": 4, "name": "חליל ווילר וויבר", "date": "", "dur": "", "tag": "ניו ג׳רזי", "ready": true, "img": "khalil-court"},
+  {"id": "west", "s": 2, "e": 3, "name": "פרד ורוז ווסט", "date": "", "dur": "", "tag": "בריטניה", "ready": true, "img": "west-couple"},
+  {"id": "williams", "s": 2, "e": 2, "name": "ראסל וויליאמס", "date": "", "dur": "", "tag": "קולונל", "ready": true, "img": "williams-1"},
+  {"id": "sells", "s": 2, "e": 1, "name": "טומי לין סלס", "date": "", "dur": "", "tag": "טרמפים", "ready": true},
+  {"id": "alcala", "s": 1, "e": 10, "name": "רודני אלקלה", "date": "", "dur": "", "tag": "The Dating Game", "ready": true, "img": "alcala-1"},
+  {"id": "bernardo", "s": 1, "e": 8, "name": "פול ברנרדו וקרלה הומולקה", "date": "", "dur": "", "tag": "ברבי וקן", "ready": true, "img": "bernardo-couple", "e2": 9},
+  {"id": "fernandez", "s": 1, "e": 7, "name": "ריימונד פרננדז ומרתה בק", "date": "", "dur": "", "tag": "זוג", "ready": true},
+  {"id": "millard", "s": 1, "e": 6, "name": "דילן מילארד", "date": "", "dur": "", "tag": "קנדה", "ready": true, "img": "millard-1"},
+  {"id": "brandt", "s": 1, "e": 5, "name": "צ'ארלי ברנד", "date": "", "dur": "", "tag": "בונוס", "ready": true},
+  {"id": "hansen", "s": 1, "e": 4, "name": "רוברט הנסן", "date": "", "dur": "", "tag": "אלסקה", "ready": true},
+  {"id": "keyes", "s": 1, "e": 3, "name": "ישראל קיז", "date": "", "dur": "", "tag": "מאורגן", "ready": true, "img": "keyes-1"},
+  {"id": "wuornos", "s": 1, "e": 2, "name": "איילין וורנוס", "date": "", "dur": "", "tag": "פלורידה", "ready": true},
+  {"id": "kemper", "s": 1, "e": 1, "name": "אד קמפר", "date": "", "dur": "", "tag": "קו-אד", "ready": true}
 ];
 
 const DILLON = {
@@ -837,3 +855,121 @@ const MEDIA = {
   'handcuffs':   { wiki:'Handcuffs',                           cap:'אזיקים' },
   'suitcase':    { wiki:'Suitcase',                            cap:'מזוודה' }
 };
+
+/* =====================================================================
+   PLATES · לוחות מאוירים
+   כל מסגרת תמונה באפליקציה מקבלת איור מלא — לא אייקון על רקע כהה.
+   ===================================================================== */
+const PAL = {
+  rust:  { bg1:'#2a1a12', bg2:'#0d0806', glow:'#ff9a4d', line:'#b39b7e', hi:'#e0cbaa', mid:'#8d7a63', dim:'#5c4d3d', fill:'#1e1610', fill2:'#2b2118' },
+  steel: { bg1:'#151d26', bg2:'#06090d', glow:'#7fb2e0', line:'#93a6b8', hi:'#cbd9e6', mid:'#6f8194', dim:'#465666', fill:'#111820', fill2:'#1a2430' },
+  blood: { bg1:'#2b0f12', bg2:'#0b0405', glow:'#ff5560', line:'#b8908f', hi:'#e6c9c7', mid:'#8d6a69', dim:'#5c4241', fill:'#1e0e0f', fill2:'#2b1517' },
+  moss:  { bg1:'#16211a', bg2:'#060a07', glow:'#7fd6a0', line:'#93b39d', hi:'#cde6d6', mid:'#6f8f79', dim:'#455c4c', fill:'#101a13', fill2:'#18251c' },
+  ink:   { bg1:'#1a1a1f', bg2:'#070708', glow:'#c9b8ff', line:'#a3a0b0', hi:'#dcd9e6', mid:'#7b7889', dim:'#4e4c58', fill:'#141419', fill2:'#1e1e25' },
+  amber: { bg1:'#2b2110', bg2:'#0b0805', glow:'#ffc04d', line:'#bda87e', hi:'#ecd9ab', mid:'#93815f', dim:'#60533a', fill:'#1f180d', fill2:'#2c2314' }
+};
+
+/* מיפוי הצבעים שבהם צוירו האיורים → צבעי הלוח */
+const _SWAP = [
+  ['#7a6d5e','line'], ['#a08f79','hi'], ['#8a7c6b','line'], ['#5c5145','mid'], ['#4a4038','dim'],
+  ['#241d16','fill'], ['#2a221a','fill2'], ['#1c1710','fill'], ['#1d1811','fill'], ['#2a1810','fill'],
+  ['#111419','fill'], ['#161a1f','fill2'], ['#101317','fill'], ['#14171b','fill2'],
+  ['#454c55','hi'], ['#3a4149','mid'], ['#292f36','dim'], ['#22272d','dim'], ['#0d1013','fill'], ['#0a0d10','fill'],
+  ['#6a7079','hi'], ['#5b6169','mid'], ['#333940','dim'], ['#20252a','dim'], ['#2c333c','mid'], ['#171b21','fill']
+];
+
+let _artCache = {};
+function artInner(key, pal) {
+  const raw = ART[key] || ART.letter || '';
+  const ck = key + '|' + pal;
+  if (_artCache[ck]) return _artCache[ck];
+  let inner = raw.replace(/^\s*<svg[^>]*>/, '').replace(/<\/svg>\s*$/, '');
+  const p = PAL[pal] || PAL.rust;
+  _SWAP.forEach(([from, to]) => { inner = inner.split(from).join(p[to]); });
+  inner = inner.split('font-family:Rubik').join('font-family:Rubik');
+  return (_artCache[ck] = inner);
+}
+
+/* לוח מאויר מלא — 400×300 */
+function plate(artKey, pal, opts) {
+  opts = opts || {};
+  const p = PAL[pal] || PAL.rust;
+  const u = (artKey + pal).replace(/[^a-z0-9]/gi, '');
+  const s = opts.scale || 2.05;
+  return `<svg class="plate" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+ <defs>
+  <linearGradient id="pb${u}" x1="0" y1="0" x2=".25" y2="1">
+    <stop offset="0" stop-color="${p.bg1}"/><stop offset=".55" stop-color="${p.bg2}"/><stop offset="1" stop-color="${p.bg2}"/>
+  </linearGradient>
+  <radialGradient id="pg${u}" cx="50%" cy="44%" r="55%">
+    <stop offset="0" stop-color="${p.glow}" stop-opacity=".26"/>
+    <stop offset=".6" stop-color="${p.glow}" stop-opacity=".05"/>
+    <stop offset="1" stop-color="${p.glow}" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="pf${u}" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="${p.fill2}" stop-opacity=".85"/><stop offset="1" stop-color="${p.bg2}" stop-opacity="0"/>
+  </linearGradient>
+  <radialGradient id="pv${u}" cx="50%" cy="50%" r="68%">
+    <stop offset=".55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".62"/>
+  </radialGradient>
+ </defs>
+ <rect width="400" height="300" fill="url(#pb${u})"/>
+ <rect width="400" height="300" fill="url(#pg${u})"/>
+ <rect y="196" width="400" height="104" fill="url(#pf${u})"/>
+ <path d="M0 200 H400" stroke="${p.dim}" stroke-width="1" opacity=".5"/>
+ <ellipse cx="200" cy="206" rx="96" ry="13" fill="#000" opacity=".42"/>
+ <g transform="translate(200 148) scale(${s}) translate(-50 -52)"
+    fill="none" stroke="${p.line}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+   ${artInner(artKey, pal)}
+ </g>
+ <g stroke="${p.hi}" stroke-width="1.4" opacity=".3" fill="none">
+   <path d="M14 14h16M14 14v12"/><path d="M386 14h-16M386 14v12"/>
+   <path d="M14 286h16M14 286v-12"/><path d="M386 286h-16M386 286v-12"/>
+ </g>
+ <rect width="400" height="300" fill="url(#pv${u})"/>
+</svg>`;
+}
+
+/* איזה פלטה לכל ראיה */
+const PAL_BY_ART = {
+  sketch:'rust', letter:'amber', mother:'blood', rifle:'steel', profile:'ink',
+  witness:'moss', calendar:'amber', fire:'blood', silencer:'steel', arsenal:'ink',
+  ballistics:'blood', drawing:'moss', petition:'amber', gavel:'ink', prison:'steel',
+  suitcase:'steel', handcuffs:'ink', police:'blood', dental:'moss', crate:'rust',
+  chat:'ink', hotel:'amber', scale:'rust', portrait:'ink'
+};
+const plateFor = (artKey, i) => plate(artKey, PAL_BY_ART[artKey] || ['rust','steel','ink','moss','amber','blood'][(i || 0) % 6]);
+
+/* לוח דיוקן לקורבן — מסגרת תיק עם צללית */
+function portraitPlate(name, sub, pal) {
+  const p = PAL[pal || 'ink'];
+  const u = (name || 'x').replace(/[^a-z0-9]/gi, '') + (pal || 'ink');
+  return `<svg class="plate" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+ <defs>
+  <linearGradient id="qb${u}" x1="0" y1="0" x2=".2" y2="1">
+    <stop offset="0" stop-color="${p.bg1}"/><stop offset="1" stop-color="${p.bg2}"/></linearGradient>
+  <radialGradient id="qg${u}" cx="50%" cy="38%" r="52%">
+    <stop offset="0" stop-color="${p.glow}" stop-opacity=".22"/><stop offset="1" stop-color="${p.glow}" stop-opacity="0"/></radialGradient>
+  <linearGradient id="qs${u}" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="${p.hi}" stop-opacity=".30"/><stop offset="1" stop-color="${p.hi}" stop-opacity=".10"/></linearGradient>
+  <radialGradient id="qv${u}" cx="50%" cy="46%" r="66%">
+    <stop offset=".5" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".6"/></radialGradient>
+ </defs>
+ <rect width="400" height="300" fill="url(#qb${u})"/>
+ <rect width="400" height="300" fill="url(#qg${u})"/>
+ <g opacity=".22" stroke="${p.dim}" stroke-width="1">
+   ${[0,1,2,3,4,5,6,7,8,9,10,11].map(i => `<path d="M0 ${18 + i * 26} H400"/>`).join('')}
+ </g>
+ <path d="M200 92c26 0 45 20 45 46 0 18-8 31-8 31 22 9 40 26 46 50H117c6-24 24-41 46-50 0 0-8-13-8-31 0-26 19-46 45-46z" fill="url(#qs${u})"/>
+ <path d="M200 92c26 0 45 20 45 46 0 18-8 31-8 31 22 9 40 26 46 50H117c6-24 24-41 46-50 0 0-8-13-8-31 0-26 19-46 45-46z"
+       fill="none" stroke="${p.hi}" stroke-width="1.5" opacity=".5"/>
+ <g stroke="${p.hi}" stroke-width="1.5" opacity=".38" fill="none">
+   <path d="M18 18h20M18 18v16"/><path d="M382 18h-20M382 18v16"/>
+   <path d="M18 282h20M18 282v-16"/><path d="M382 282h-20M382 282v-16"/>
+ </g>
+ <rect width="400" height="300" fill="url(#qv${u})"/>
+</svg>`;
+}
+
+/* חשיפה מפורשת ללוח הבקרה */
+window.DB = DB; window.EPISODES = EPISODES; window.IMG = IMG; window.MEDIA = MEDIA;

@@ -45,7 +45,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="/assets/style.css">
+<link rel="stylesheet" href="/assets/style.css?v=6">
 
 <script type="application/ld+json">
 {
@@ -91,7 +91,7 @@
       </div>
     </div>
     <p class="hero-sub">כל מה שדובר עליו בפרק — <b>ראיות, קורבנות, מכתבים, צירי זמן ומקורות</b> — במקום אחד. פרויקט מעריצים בהשראת <b>פודקאסט רצח</b> של מאיה גזית ושי מגל.</p>
-    <div class="tape">ARCHIVE · V5</div>
+    <div class="tape">ARCHIVE · V6</div>
     <div class="hero-art" id="hero-art"></div>
   </div>
 
@@ -166,11 +166,29 @@
 
 </div>
 
-<script src="/assets/data.js"></script>
-<script src="/assets/app.js"></script>
+<script src="/assets/data.js?v=6"></script>
+<script src="/assets/cases.js?v=6"></script>
+<script src="/assets/custom-images.js?v=6"></script>
+<script src="/assets/editor-page.js?v=6"></script>
+<script src="/assets/app.js?v=6"></script>
 <script>
 if ('serviceWorker' in navigator) {
-  addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+  addEventListener('load', async () => {
+    try {
+      const reg = await navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' });
+      reg.addEventListener('updatefound', () => {
+        const w = reg.installing;
+        w && w.addEventListener('statechange', () => {
+          if (w.state === 'installed' && navigator.serviceWorker.controller) w.postMessage('skipWaiting');
+        });
+      });
+      let reloaded = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (reloaded) return; reloaded = true; location.reload();
+      });
+      reg.update();
+    } catch (e) {}
+  });
 }
 </script>
 </body>

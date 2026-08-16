@@ -1,10 +1,8 @@
-/* רצח · הארכיון — service worker | Dubel Team */
-const V = 'retzach-v5';
-const CORE = [
-  '/', '/index.html',
-  '/assets/style.css', '/assets/data.js', '/assets/app.js',
-  '/manifest.webmanifest', '/icons/icon.svg', '/icons/icon-192.png', '/icons/icon-512.png'
-];
+/* רצח · הארכיון — service worker | Dubel Team
+   אסטרטגיה: network-first לכל מה ששלנו, כדי שדיפלוי חדש נראה מיד.
+   הקאש משמש רק כרשת ביטחון כשאין אינטרנט. */
+const V = 'retzach-v6';
+const CORE = ['/', '/index.html', '/assets/style.css', '/assets/data.js', '/assets/app.js'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(V).then(c => c.addAll(CORE)).then(() => self.skipWaiting()));
@@ -12,40 +10,37 @@ self.addEventListener('install', e => {
 
 self.addEventListener('activate', e => {
   e.waitUntil(
-    caches.keys().then(ks => Promise.all(ks.filter(k => k !== V).map(k => caches.delete(k))))
+    caches.keys()
+      .then(ks => Promise.all(ks.filter(k => k !== V).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
+
+self.addEventListener('message', e => { if (e.data === 'skipWaiting') self.skipWaiting(); });
 
 self.addEventListener('fetch', e => {
   const { request } = e;
   if (request.method !== 'GET') return;
   const url = new URL(request.url);
-  if (url.origin !== location.origin) return;              // never cache third parties
+  if (url.origin !== location.origin) return;                 // צד שלישי — לא נוגעים
 
-  // navigations: network-first, fall back to cached shell
-  if (request.mode === 'navigate') {
+  const isImage = request.destination === 'image' || /\/(img|icons)\//.test(url.pathname);
+
+  if (isImage) {                                              // תמונות: cache-first, הן לא משתנות
     e.respondWith(
-      fetch(request).then(r => {
-        const copy = r.clone();
-        caches.open(V).then(c => c.put('/index.html', copy));
+      caches.match(request).then(hit => hit || fetch(request).then(r => {
+        if (r && r.status === 200) { const c = r.clone(); caches.open(V).then(x => x.put(request, c)); }
         return r;
-      }).catch(() => caches.match('/index.html'))
+      }))
     );
     return;
   }
 
-  // assets: cache-first, refresh in background
+  /* כל השאר (HTML, CSS, JS): network-first — תמיד הגרסה החדשה */
   e.respondWith(
-    caches.match(request).then(hit => {
-      const net = fetch(request).then(r => {
-        if (r && r.status === 200) {
-          const copy = r.clone();
-          caches.open(V).then(c => c.put(request, copy));
-        }
-        return r;
-      }).catch(() => hit);
-      return hit || net;
-    })
+    fetch(request).then(r => {
+      if (r && r.status === 200) { const c = r.clone(); caches.open(V).then(x => x.put(request, c)); }
+      return r;
+    }).catch(() => caches.match(request).then(hit => hit || caches.match('/index.html')))
   );
 });
