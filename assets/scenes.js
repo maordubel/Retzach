@@ -182,12 +182,18 @@ const SCENE_MAP = {
   fernandez:['city','rose'],     bernardo: ['city','rose'],      alcala:   ['city','amberN'],
   sells:    ['highway','amberN'],williams: ['snow','cold'],      west:     ['house','ash'],
   khalil:   ['city','night'],    conahan:  ['forest','green'],   sowell:   ['house','amberN'],
-  kohlhepp: ['forest','ash'],    grate:    ['house','green']
+  kohlhepp: ['forest','ash'],    grate:    ['house','green'],
+  /* עונה 3 */
+  head:     ['city','dusk'],     saevar:   ['snow','cold'],     nowak:    ['highway','night'],
+  pickton:  ['forest','ash'],    glatman:  ['highway','dusk'],  corll:    ['water','amberN'],
+  lipstick: ['city','night'],    bell:     ['house','ash'],     biblejohn:['city','rose']
 };
 const SCENE_OPT = {
   conahan:{trail:1}, hansen:{plane:1}, keyes:{plane:1}, sells:{sign:1}, wuornos:{sign:1},
   west:{tape:1}, sowell:{tape:1}, grate:{tape:1}, brandt:{dock:1}, millard:{dock:1},
-  kemper:{figure:250}, alcala:{figure:300}, bernardo:{figure:520}, khalil:{figure:280}, fernandez:{figure:430}
+  kemper:{figure:250}, alcala:{figure:300}, bernardo:{figure:520}, khalil:{figure:280}, fernandez:{figure:430},
+  head:{figure:300}, saevar:{plane:0}, nowak:{sign:1}, pickton:{trail:1}, glatman:{sign:1},
+  corll:{dock:1}, lipstick:{figure:340}, bell:{tape:1}, biblejohn:{figure:380}
 };
 function buildScene(id) {
   const m = SCENE_MAP[id]; if (!m) return '';

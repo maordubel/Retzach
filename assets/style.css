@@ -77,7 +77,10 @@ button{font-family:inherit;border:0;background:none;color:inherit;cursor:pointer
    radial-gradient(70% 50% at 78% 10%,rgba(193,18,31,.18),transparent 65%),
    repeating-linear-gradient(90deg,transparent 0 3px,rgba(255,255,255,.014) 3px 4px);
   pointer-events:none}
-.brandmark{display:flex;align-items:flex-end;gap:10px;position:relative}
+.brandmark{display:flex;flex-direction:column;align-items:flex-start;gap:0;position:relative}
+.stencil-top{font-family:'Rubik',sans-serif;font-weight:800;font-size:26px;line-height:1;
+  letter-spacing:.30em;color:var(--muted);margin-bottom:6px;padding-inline-start:2px;
+  text-shadow:0 1px 0 #000}
 .stencil{font-family:'Rubik',sans-serif;font-weight:900;font-size:72px;line-height:.9;
   letter-spacing:-.05em;color:var(--text);position:relative;padding-bottom:6px;
   text-shadow:0 2px 0 #000,0 0 50px rgba(193,18,31,.3)}
@@ -600,6 +603,7 @@ svg.scene .tape-line{animation:tapeSway 9s ease-in-out infinite;transform-origin
   .hero-art{grid-column:2;grid-row:1 / span 4;aspect-ratio:16/10;height:auto;margin:0;border-radius:20px;overflow:hidden;
     border:1px solid var(--line2);position:relative;box-shadow:0 24px 60px rgba(0,0,0,.55)}
   .stencil{font-size:104px}
+  .stencil-top{font-size:36px;letter-spacing:.34em;margin-bottom:8px}
   .drip{bottom:-26px;width:30px;height:38px}
 
   .toolbar{display:grid;grid-template-columns:340px 1fr;gap:18px;align-items:center;margin:8px 0 4px}
@@ -830,6 +834,14 @@ svg.scene .tape-line{animation:tapeSway 9s ease-in-out infinite;transform-origin
   padding:13px 15px;font-size:12.5px;line-height:1.8;color:#dcc9a0;margin-bottom:14px;font-weight:300}
 .ad-warn code,.ad-tbl code,.ad-p code{background:rgba(255,255,255,.07);padding:1px 6px;border-radius:5px;
   font-size:11.5px;direction:ltr;display:inline-block;unicode-bidi:isolate}
+.ad-mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;color:var(--muted2);
+  direction:ltr;unicode-bidi:isolate;display:inline-block}
+.ad-conn{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:14px;padding:10px 13px;
+  border-radius:12px;border:1px solid var(--line);background:var(--surface);font-size:12px;font-weight:300}
+.ad-conn b{font-weight:600;font-size:12.5px}
+.ad-conn i{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
+.ad-conn.on i{background:#4ea36b;box-shadow:0 0 0 3px rgba(78,163,107,.18)}
+.ad-conn.off i{background:#b3453f;box-shadow:0 0 0 3px rgba(179,69,63,.18)}
 .ad-note{font-size:11.5px;color:var(--muted2);line-height:1.75;padding:11px 13px;border:1px dashed var(--line2);
   border-radius:11px;margin-top:12px;font-weight:300}
 .ad-tbl{width:100%;border-collapse:collapse;font-size:13px}

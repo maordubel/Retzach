@@ -268,7 +268,7 @@ function loadAdmin() {
   if (window.openAdmin) return window.openAdmin();
   window.__adminWanted = true;
   const sc = document.createElement('script');
-  sc.src = '/assets/admin.js?v=6'; document.head.appendChild(sc);
+  sc.src = '/assets/admin.js?v=9'; document.head.appendChild(sc);
 }
 addEventListener('keydown', e => {
   if (e.ctrlKey && e.shiftKey && (e.key === 'A' || e.key === 'a')) { e.preventDefault(); loadAdmin(); }
@@ -304,7 +304,7 @@ function toast(msg) {
 }
 
 async function share(title, url) {
-  const data = { title, text: 'רצח · הארכיון — כל מה שדובר עליו בפרק', url };
+  const data = { title, text: 'ארכיון הרצח — כל מה שדובר עליו בפרק', url };
   try {
     if (navigator.share) { await navigator.share(data); return; }
     await navigator.clipboard.writeText(url);
@@ -336,14 +336,16 @@ function openAbout() {
   $('#sheet-body').innerHTML = `
     <div class="grab"></div>
     <div class="ab-hero">
-      <div class="mark">רצח</div>
-      <p>ארכיון המאזינים של <b>פודקאסט רצח</b>. לכל פרק — תיק אחד שמרכז את הראיות, הקורבנות, ציר הזמן, הסרטים הדוקומנטריים והמקורות שדובר עליהם.</p>
+      <div class="mark">ארכיון<br>הרצח</div>
+      <p><b>מחווה לקהילת המאזינים של פודקאסט רצח — ולה בלבד.</b> נבנה כדי להעשיר את הידע של מאזינים שמעוניינים בכך. לכל פרק — תיק אחד שמרכז את הראיות, הקורבנות, ציר הזמן, הסרטים הדוקומנטריים והמקורות שדובר עליהם.</p>
     </div>
 
     <div class="ab-block">
       <h5>מה זה</h5>
-      <p>פרויקט מחווה עצמאי, לא מסחרי. הוא <b>אינו מסונף לפודקאסט</b> ואינו מחליף אותו — הוא נועד לתת מקום אחד לכל מה שמאזין רוצה לראות אחרי שהוא מסיים פרק.</p>
-      <p>התוכן המקורי, המחקר והעריכה שייכים ל<b>מאיה גזית ושי מגל</b>.</p>
+      <p><b>ארכיון הרצח</b> הוא מחווה עצמאית ולא מסחרית ל<b>קהילת המאזינים של פודקאסט רצח</b>. הוא נבנה בשביל הקהילה הזאת ובשבילה בלבד, ולמטרה אחת: <b>להעשיר את הידע של מאזינים שמעוניינים בכך</b> אחרי שהם מסיימים פרק.</p>
+      <p>הוא <b>אינו מסונף לפודקאסט, אינו מייצג אותו ואינו מחליף אותו</b>. אין לו כל קשר רשמי למאיה גזית, לשי מגל או למי מטעמם. הוא לא נועד להרוויח, לא נועד לתחרות, ולא נועד להחליף האזנה.</p>
+      <p>התוכן המקורי, המחקר, העריכה והמותג של הפודקאסט שייכים ל<b>מאיה גזית ושי מגל</b>. כל מה שיש כאן נאסף כדי לתת מקום אחד למה שכבר דובר עליו בפרק — ומעולם לא כתחליף לו.</p>
+      <p style="color:var(--muted2);font-size:12.5px">בקשת הסרה, תיקון או שינוי מכל סיבה — נענית מיד. <a href="https://www.dubelteam.com/contact.html" target="_blank" rel="noopener" style="color:var(--red-hot)">צרו קשר</a>.</p>
     </div>
 
     <div class="ab-block">
@@ -511,7 +513,7 @@ function nextCase(currentId) {
 function openKiller(id, skipHistory) {
   const k = DB[id]; if (!k) return;
   $('#tb-k-title').textContent = k.name;
-  document.title = k.name + ' · רצח · הארכיון';
+  document.title = k.name + ' · ארכיון הרצח';
   if (!skipHistory) history.pushState({ id }, '', '?case=' + id);
 
   const html = `
@@ -676,7 +678,7 @@ function openKiller(id, skipHistory) {
             <div class="go">${IC.ext}</div>
           </a>`).join('')}</div>
         <div id="credits-slot"></div>
-        <div class="note">הארכיון הזה הוא פרויקט מחווה של מאזינים. הוא אינו מסונף לפודקאסט רצח ואינו מחליף אותו — <b>הוא נועד לתת מקום אחד לכל מה שדובר בפרק</b>. התוכן המקורי, המחקר והעריכה שייכים למאיה גזית ושי מגל.</div>
+        <div class="note"><b>ארכיון הרצח</b> הוא מחווה עצמאית ולא מסחרית לקהילת המאזינים של פודקאסט רצח, ולה בלבד. הוא נועד <b>להעשיר את הידע של מאזינים שמעוניינים בכך</b> — ואינו מסונף לפודקאסט, אינו מייצג אותו ואינו מחליף אותו. התוכן המקורי, המחקר והעריכה שייכים למאיה גזית ושי מגל.</div>
       </div>
     </div>
 
@@ -774,7 +776,7 @@ function goHome() {
   const h = $('#v-home'); h.classList.add('on', 'back');
   $('#player').classList.remove('on', 'open');
   $('#pl-frame').src = '';
-  document.title = 'רצח · הארכיון — כל מה שדובר עליו בפרק';
+  document.title = 'ארכיון הרצח — כל מה שדובר עליו בפרק';
   window.scrollTo(0, 0);
   if (location.search) history.pushState({}, '', location.pathname);
 }
@@ -791,7 +793,7 @@ loadMedia().then(() => { hydrateMedia(document); });
 $('#q').oninput = ev => { query = ev.target.value.trim(); renderCases(); };
 $('#back').onclick = goHome;
 $('#about-btn').onclick = openAbout;
-$('#share-btn').onclick = () => share('רצח · הארכיון', BRAND.site);
+$('#share-btn').onclick = () => share('ארכיון הרצח', BRAND.site);
 $('#share-k').onclick = () => {
   const id = new URLSearchParams(location.search).get('case');
   share(document.title, BRAND.site + (id ? '?case=' + id : ''));
@@ -842,7 +844,7 @@ observe(document);
 
 /* ---------- signature ---------- */
 console.log(
-  '%c רצח · הארכיון %c Built by Dubel Team — dubelteam.com ',
+  '%c ארכיון הרצח %c Built by Dubel Team — dubelteam.com ',
   'background:#c1121f;color:#fff;font-weight:700;padding:4px 8px;border-radius:4px 0 0 4px',
   'background:#17140f;color:#ded5c8;padding:4px 8px;border-radius:0 4px 4px 0'
 );

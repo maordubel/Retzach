@@ -1,5 +1,5 @@
 /* =====================================================================
-   לוח בקרה · רצח · הארכיון
+   לוח בקרה · ארכיון הרצח
    נטען רק בדרישה. ציבורית האפליקציה לא יודעת שהוא קיים.
    כניסה:  ?admin  ·  Ctrl+Shift+A  ·  לחיצה שביעית על תג הגרסה
    ===================================================================== */
@@ -45,7 +45,7 @@
     mount(`<div class="ad-gate">
       <div class="ad-lock">${icon('lock')}</div>
       <h2>לוח בקרה</h2>
-      <p>אזור מוגן. הזינו מפתח גישה.</p>
+      <p>אזור מוגן. הזינו מפתח גישה.<br><small style="color:var(--muted2)">טרם הגדרתם מפתח? כל ערך יכניס אתכם.</small></p>
       <input id="ad-key" type="password" placeholder="מפתח גישה" autocomplete="off" spellcheck="false">
       <button class="ad-btn primary" id="ad-go">כניסה</button>
       <div class="ad-err" id="ad-err"></div>
@@ -116,7 +116,7 @@
     mount(`
       <div class="ad-shell">
         <header class="ad-top">
-          <div class="ad-brand"><b>לוח בקרה</b><span>רצח · הארכיון</span></div>
+          <div class="ad-brand"><b>לוח בקרה</b><span>ארכיון הרצח</span></div>
           <div class="ad-role">${esc((ROLES[state.role] || {}).label || '')}</div>
           <button class="ad-x" id="ad-close">${icon('x')}</button>
         </header>
@@ -142,9 +142,17 @@
       return (window.DB && DB[id] && DB[id].name) ? 'תיק · ' + DB[id].name : p;
     };
     $('#ad-body').innerHTML = `
+      ${d.setup ? `<div class="ad-warn" style="border-color:rgba(232,35,47,.4);background:rgba(193,18,31,.09);color:#f0c4c4">
+        <b>הלוח אינו מוגן.</b> לא הוגדר <code>ADMIN_TOKEN</code>, ולכן כל מי שיודע איך לפתוח את הלוח נכנס אליו.
+        הגדירו אותו ב-Vercel: <b>Settings → Environment Variables</b>, ואז Redeploy.</div>` : ''}
       ${!d.configured ? `<div class="ad-warn"><b>מקור נתונים לא מחובר.</b> המספרים למטה נספרים מקומית בדפדפן הזה בלבד.
-        לנתונים אמיתיים מהשרת: הוסיפו ב-Vercel חיבור <code>KV</code> ואת משתני הסביבה
-        <code>KV_REST_API_URL</code>, <code>KV_REST_API_TOKEN</code>, <code>ADMIN_TOKEN</code>.</div>` : ''}
+        לנתונים אמיתיים מהשרת: ב-Vercel → <b>Storage</b> → צרו או חברו מסד <b>Redis</b> לפרויקט
+        (משתני הסביבה נוספים אוטומטית), ואז <b>Redeploy</b>.
+        ${d.storage && d.storage.hint ? `<br><span class="ad-mono">${esc(d.storage.hint)}</span>` : ''}</div>` : ''}
+      ${d.storage ? `<div class="ad-conn ${d.storage.ok ? 'on' : 'off'}">
+        <i></i><b>${d.storage.ok ? 'מסד הנתונים מחובר' : 'מסד הנתונים מנותק'}</b>
+        ${d.storage.ok ? `<span class="ad-mono">${esc(d.storage.host || '')} · ${esc(d.storage.source || '')}${d.storage.auto ? ' · זוהה אוטומטית' : ''}</span>` : ''}
+      </div>` : ''}
       <div class="ad-kpis">
         <div class="ad-kpi"><b>${(d.total || 0).toLocaleString('he-IL')}</b><span>צפיות בסך הכל</span></div>
         <div class="ad-kpi"><b>${(d.visitors || 0).toLocaleString('he-IL')}</b><span>מבקרים ייחודיים</span></div>
@@ -237,7 +245,7 @@
   function exportImages() {
     const cur = lsGet('retzach.custom', {});
     if (!Object.keys(cur).length) return alert('אין תמונות לייצוא.');
-    const body = '/* נוצר בלוח הבקרה של רצח · הארכיון */\nwindow.CUSTOM_IMAGES = ' +
+    const body = '/* נוצר בלוח הבקרה של ארכיון הרצח */\nwindow.CUSTOM_IMAGES = ' +
       JSON.stringify(cur, null, 1) + ';\n';
     dl('custom-images.js', body, 'application/javascript');
   }

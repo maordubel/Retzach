@@ -114,9 +114,10 @@
 
  <text x="80" y="128" fill="#e8232f" font-family="Rubik, DejaVu Sans, sans-serif" font-size="21" font-weight="700" letter-spacing="9">ARCHIVE</text>
  <rect x="80" y="150" width="380" height="3" fill="#c1121f" opacity=".8"/>
- <text x="80" y="240" fill="#f4efe8" font-family="Rubik, DejaVu Sans, sans-serif" font-size="62" font-weight="800">RETZACH</text>
- <text x="80" y="300" fill="#cfc6ba" font-family="Rubik, DejaVu Sans, sans-serif" font-size="27" font-weight="400">The listener archive</text>
+ <text x="80" y="240" fill="#f4efe8" font-family="Rubik, DejaVu Sans, sans-serif" font-size="62" font-weight="800">RETZACH ARCHIVE</text>
+ <text x="80" y="300" fill="#cfc6ba" font-family="Rubik, DejaVu Sans, sans-serif" font-size="27" font-weight="400">A tribute to the Podcast Retzach listeners</text>
  <text x="80" y="352" fill="#9c9184" font-family="Rubik, DejaVu Sans, sans-serif" font-size="27" font-weight="400">Evidence · Victims · Timelines · Sources</text>
+ <text x="80" y="392" fill="#6f665c" font-family="Rubik, DejaVu Sans, sans-serif" font-size="20" font-weight="400">Independent · non-commercial · not affiliated with the podcast</text>
  <rect x="80" y="470" width="600" height="1" fill="#2b241d"/>
  <text x="80" y="520" fill="#8d8377" font-family="Rubik, DejaVu Sans, sans-serif" font-size="20" font-weight="600" letter-spacing="3">RETZACH.DUBELTEAM.COM</text>
  <text x="80" y="552" fill="#5b524a" font-family="Rubik, DejaVu Sans, sans-serif" font-size="17" font-weight="500" letter-spacing="2">BUILT BY DUBEL TEAM</text>
