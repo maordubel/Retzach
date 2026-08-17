@@ -466,79 +466,7 @@ function ohioMap(vics) {
 }
 
 
-/* ---------- BRIEF CASE (תיק מתועד) ---------- */
-function openBrief(k, skipHistory) {
-  $('#tb-k-title').textContent = k.name;
-  document.title = k.name + ' · רצח · הארכיון';
-  if (!skipHistory) history.pushState({ id: k.id }, '', '?case=' + k.id);
-
-  const hero = (k.gal && k.gal[0] && !k.gal[0].sens) ? k.gal[0].k : null;
-  const gal  = k.gal || [];
-
-  $('#k-content').innerHTML = `
-  <div class="bwrap">
-    <div class="bhero">
-      ${hero ? `<div class="bhero-img">${photo(hero, plateFor('portrait'), {})}</div>` : ''}
-      <div class="bhero-t">
-        <div class="beyebrow">עונה ${k.s} · פרק ${k.e}${k.e2 ? '–' + k.e2 : ''}</div>
-        <h1 class="kname">${esc(k.name)}</h1>
-        ${k.alias ? `<div><span class="kalias">${esc(k.alias)}</span></div>` : ''}
-        <p class="kline">${esc(k.line)}</p>
-        <div class="bmeta"><span>${esc(k.en)}</span></div>
-      </div>
-    </div>
-
-    <div class="block rv"><div class="block-h"><span class="ico">${IC.mic}</span><h3>מהפרק · הפוסט של מאיה</h3></div>
-      <div class="bpost">${esc(k.post).replace(/\n/g, '<br>')}
-        <div class="bpost-src">ציטוט מדויק מהפוסט בקבוצת הפייסבוק של הפודקאסט</div>
-      </div>
-    </div>
-
-    <div class="block rv"><div class="block-h"><span class="ico">${IC.file}</span><h3>גיליון תיק</h3></div>
-      <div class="card"><div class="facts">${k.facts.map(f => `<div class="fact"><div class="k">${esc(f[0])}</div><div class="v">${esc(f[1])}</div></div>`).join('')}</div></div>
-    </div>
-
-    ${gal.length ? `<div class="block rv"><div class="block-h"><span class="ico">${IC.cam}</span><h3>תמונות מהתיק</h3></div>
-      <div class="gal">${gal.map((g, i) => `
-        <figure class="gtile${g.sens ? ' sens' : ''}">
-          ${photo(g.k, plateFor(['portrait','letter','witness'][i % 3], i))}
-          ${g.sens ? `<button class="sens-veil" type="button"><span>${IC.eyeoff}</span><b>תוכן רגיש</b><i>לחצו להצגה</i></button>` : ''}
-          <figcaption>${esc(g.c)}</figcaption>
-        </figure>`).join('')}</div>
-      <div class="note">התמונות באדיבות החומרים שפורסמו בקבוצת הפודקאסט. תמונות שסומנו כרגישות מוסתרות כברירת מחדל.</div>
-    </div>` : ''}
-
-    ${k.watch && k.watch.length ? `<div class="block rv"><div class="block-h"><span class="ico">${IC.cam}</span><h3>לצפייה</h3></div>
-      <div class="watch">${k.watch.map(w => `
-        <a class="wcard" href="${w.u}" target="_blank" rel="noopener">
-          <div class="wthumb">${IC.play}</div>
-          <div class="wbody"><h5>${esc(w.t)}</h5><p>${esc(w.d)}</p>
-          <div class="wtags"><span class="wtag ${COST[w.cost] ? COST[w.cost][1] : ''}">${COST[w.cost] ? COST[w.cost][0] : ''}</span>${w.note ? `<span class="wtag">${esc(w.note)}</span>` : ''}</div></div>
-        </a>`).join('')}</div></div>` : ''}
-
-    <div class="block rv"><div class="block-h"><span class="ico">${IC.link}</span><h3>מקורות</h3></div>
-      <div class="links">${(k.links || []).map(l => `
-        <a class="lnk" href="${l.u}" target="_blank" rel="noopener">
-          <div class="li">${IC.doc}</div>
-          <div class="lt"><h5>${esc(l.t)}</h5></div>
-          <div class="go">${IC.ext}</div>
-        </a>`).join('')}</div>
-      <div class="note"><b>תיק מתועד.</b> הפוסט מצוטט כלשונו. גיליון העובדות מבוסס על המקורות שלמעלה. תיק זה טרם עבר תיעוד מלא ברמת התיקים המורחבים — ראיות, קורבנות וציר זמן יתווספו.</div>
-    </div>
-
-    ${nextCase(k.id)}
-  </div>`;
-
-  showView('#v-killer');
-  bindCommon(k);
-  observe($('#v-killer'));
-  hydrateMedia($('#v-killer'));
-  $$('#v-killer .sens-veil').forEach(b => b.onclick = ev => {
-    ev.stopPropagation(); b.closest('.gtile').classList.add('shown'); b.remove();
-  });
-}
-
-/* משותף לשני סוגי התיקים */
+/* ---------- משותף לכל התיקים ---------- */
 function bindCommon(k) {
   const nc = $('#v-killer .nextcase');
   if (nc) nc.onclick = () => openKiller(nc.dataset.next);
@@ -582,7 +510,6 @@ function nextCase(currentId) {
 
 function openKiller(id, skipHistory) {
   const k = DB[id]; if (!k) return;
-  if (k.brief) return openBrief(k, skipHistory);
   $('#tb-k-title').textContent = k.name;
   document.title = k.name + ' · רצח · הארכיון';
   if (!skipHistory) history.pushState({ id }, '', '?case=' + id);
@@ -625,11 +552,20 @@ function openKiller(id, skipHistory) {
       ${k.story.map((s, i) => `
       <div class="block rv"><div class="block-h"><span class="ico">${IC.file}</span><h3>${esc(s.h)}</h3></div>
         <div class="card"><div class="prose"><p>${s.t}</p></div></div>
-        ${k.quotes[i] ? `<div class="quote rv"><p>${esc(k.quotes[i].t)}</p><div class="by">— <b>${esc(k.quotes[i].by)}</b> · ${esc(k.quotes[i].role)}</div></div>` : ''}
+        ${k.quotes[i] ? `<div class="quote rv"><p>${esc(k.quotes[i].t)}</p><div class="by">— <b>${esc(k.quotes[i].by)}</b>${k.quotes[i].role ? ' · ' + esc(k.quotes[i].role) : ''}</div></div>` : ''}
       </div>`).join('')}
-      <div class="block rv">
-        <div class="quote"><p>${esc(k.quotes[5].t)}</p><div class="by">— <b>${esc(k.quotes[5].by)}</b> · ${esc(k.quotes[5].role)}</div></div>
-      </div>
+      ${k.quotes.slice(k.story.length).map(q => `<div class="block rv">
+        <div class="quote"><p>${esc(q.t)}</p><div class="by">— <b>${esc(q.by)}</b>${q.role ? ' · ' + esc(q.role) : ''}</div></div>
+      </div>`).join('')}
+      ${k.gal && k.gal.length ? `<div class="block rv"><div class="block-h"><span class="ico">${IC.cam}</span><h3>תמונות מהתיק</h3></div>
+        <div class="gal">${k.gal.map((g, i) => `
+          <figure class="gtile${g.sens ? ' sens' : ''}">
+            ${photo(g.k, plateFor(['portrait','letter','witness'][i % 3], i))}
+            ${g.sens ? `<button class="sens-veil" type="button"><span>${IC.eyeoff}</span><b>תוכן רגיש</b><i>לחצו להצגה</i></button>` : ''}
+            <figcaption>${esc(g.c)}</figcaption>
+          </figure>`).join('')}</div>
+        <div class="note">התמונות באדיבות החומרים שפורסמו בקבוצת הפודקאסט. תמונות שסומנו כרגישות מוסתרות כברירת מחדל — בהתאם למדיניות התוכן של הארכיון.</div>
+      </div>` : ''}
       ${k.gallery && k.gallery.length ? `<div class="block rv"><div class="block-h"><span class="ico">${IC.cam}</span><h3>המקומות שבתיק</h3></div>
         <div class="gal">${k.gallery.map(mk => `<figure class="gtile">${media(mk, plateFor('profile'), { contain: mk.startsWith('map-') })}<figcaption>${esc((MEDIA[mk] || {}).cap || '')}</figcaption></figure>`).join('')}</div>
         <div class="note">תמונות אמיתיות מוויקישיתוף, ברישיון חופשי. הן מראות את <b>המקומות</b> שבהם התיק התרחש — לא את המעורבים.</div>
@@ -785,6 +721,9 @@ function openKiller(id, skipHistory) {
 
   // evidence sheet
   $$('#v-killer .ev').forEach(b => b.onclick = () => openSheet(k.evidence[+b.dataset.ev]));
+  $$('#v-killer .sens-veil').forEach(b => b.onclick = ev => {
+    ev.stopPropagation(); b.closest('.gtile').classList.add('shown'); b.remove();
+  });
 
 
   bindCommon(k);
