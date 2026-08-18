@@ -96,16 +96,29 @@ function statVal(k, st, c) {
 }
 
 /* ---------- משחק הארכיון (נטען רק בלחיצה) ---------- */
-let _quizLoaded = false;
+let _gamesLoaded = false;
 function openQuiz() {
-  if (_quizLoaded) { window.openQuiz && window.openQuiz(); return; }
-  _quizLoaded = true;
+  if (_gamesLoaded) { window.openGames && window.openGames(); return; }
+  _gamesLoaded = true;
   const sc = document.createElement('script');
-  sc.src = '/assets/quiz.js?v=10';
-  sc.onerror = () => { _quizLoaded = false; toast('לא הצלחתי לטעון את המשחק. נסו שוב.'); };
+  sc.src = '/assets/games.js?v=11';
+  sc.onerror = () => { _gamesLoaded = false; toast('לא הצלחתי לטעון את המשחקים. נסו שוב.'); };
   document.head.appendChild(sc);
 }
 window.openQuizLoad = openQuiz;
+
+/* פס הסימנים בבאנר — סימן אחד לכל תיק סגור, נבנה מהמאגר */
+function paintTicks() {
+  const el = document.getElementById('gb-ticks'); if (!el) return;
+  const ids = Object.keys(DB || {});
+  const nEl = document.getElementById('gb-n');
+  if (nEl) nEl.textContent = String(ids.length).padStart(2, '0');
+  /* גובה הסימן = מספר הקורבנות בתיק. הצטברות אמיתית, לא דקורציה. */
+  const vs = ids.map(id => vCount(DB[id]).all);
+  const mx = Math.max(4, ...vs);
+  el.innerHTML = vs.map((v, i) =>
+    `<i class="${i % 9 === 4 ? 'hot' : ''}" style="height:${Math.round(4 + (v / mx) * 12)}px"></i>`).join('');
+}
 
 /* ---------- HELPERS ---------- */
 const $ = s => document.querySelector(s);
@@ -333,7 +346,7 @@ function loadAdmin() {
   if (window.openAdmin) return window.openAdmin();
   window.__adminWanted = true;
   const sc = document.createElement('script');
-  sc.src = '/assets/admin.js?v=10'; document.head.appendChild(sc);
+  sc.src = '/assets/admin.js?v=11'; document.head.appendChild(sc);
 }
 addEventListener('keydown', e => {
   if (e.ctrlKey && e.shiftKey && (e.key === 'A' || e.key === 'a')) { e.preventDefault(); loadAdmin(); }
@@ -868,6 +881,7 @@ $('#q').oninput = ev => { query = ev.target.value.trim(); renderCases(); };
 $('#back').onclick = goHome;
 $('#about-btn').onclick = openAbout;
 const _pb = $('#play-btn'); if (_pb) _pb.onclick = () => openQuiz();
+paintTicks();
 $('#share-btn').onclick = () => share('ארכיון הרצח', BRAND.site);
 $('#share-k').onclick = () => {
   const id = new URLSearchParams(location.search).get('case');
@@ -925,4 +939,5 @@ console.log(
 );
 
 /* חשיפה למודולים שנטענים בדרישה (לוח הבקרה, המשחק) */
-window.openKiller = openKiller; window.track = track; window.VROLE = VROLE; window.vCount = vCount;
+window.openKiller = openKiller; window.track = track;
+window.goHome = goHome; window.VROLE = VROLE; window.vCount = vCount;
