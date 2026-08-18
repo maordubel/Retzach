@@ -1021,3 +1021,4 @@ function portraitPlate(name, sub, pal) {
 
 /* חשיפה מפורשת ללוח הבקרה */
 window.DB = DB; window.EPISODES = EPISODES; window.IMG = IMG; window.MEDIA = MEDIA;
+window.photo = photo; window.plateFor = plateFor; window.portraitPlate = portraitPlate; window.SCENE = SCENE;

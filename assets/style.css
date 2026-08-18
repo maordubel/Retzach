@@ -920,8 +920,13 @@ svg.scene .tape-line{animation:tapeSway 9s ease-in-out infinite;transform-origin
   animation:gmfade .26s var(--ease)}
 @keyframes gmfade{from{opacity:0}to{opacity:1}}
 
-.gm-panel{position:absolute;inset:0;display:flex;flex-direction:column;
-  background:linear-gradient(180deg,#100d0b,#0a0908 60%);animation:gmup .36s var(--ease)}
+.gm-panel{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden;
+  background:#0a0908;animation:gmup .36s var(--ease)}
+.gm-amb{position:absolute;inset:0;width:100%;height:100%;opacity:.55;pointer-events:none;z-index:0}
+.gm-panel>*:not(.gm-amb){position:relative;z-index:1}
+.gm-panel:after{content:'';position:absolute;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(120% 60% at 50% 0%,rgba(193,18,31,.14),transparent 62%),
+             linear-gradient(180deg,rgba(16,13,11,.72),rgba(10,9,8,.9) 62%)}
 @keyframes gmup{from{transform:translateY(22px);opacity:0}to{transform:none;opacity:1}}
 
 /* ---------- סרגל ניווט קבוע ---------- */
@@ -940,7 +945,8 @@ svg.scene .tape-line{animation:tapeSway 9s ease-in-out infinite;transform-origin
 .gm-nt i{display:block;font-family:var(--gm-mono);font-size:9px;letter-spacing:.16em;
   color:var(--muted2);font-style:normal;margin-top:2px}
 
-.gm-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:26px 20px 44px;position:relative}
+.gm-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;position:relative;
+  padding:26px 20px calc(var(--bnav-h) + 46px + env(safe-area-inset-bottom))}
 .gm-body:before{content:'';position:absolute;inset:0;pointer-events:none;
   background:radial-gradient(80% 34% at 50% 0%,rgba(193,18,31,.13),transparent 70%)}
 
@@ -1350,7 +1356,7 @@ a.shelf-i:hover .shelf-go span{transform:translateX(-3px)}
    ===================================================================== */
 :root{ --bnav-h: 58px; }
 
-#bnav{position:fixed;inset-inline:0;bottom:0;z-index:1600;display:grid;
+#bnav{position:fixed;inset-inline:0;bottom:0;z-index:2600;display:grid;
   grid-template-columns:repeat(5,1fr);gap:2px;
   padding:6px 6px calc(6px + env(safe-area-inset-bottom));
   background:rgba(9,8,7,.93);backdrop-filter:blur(18px) saturate(1.2);
@@ -1453,3 +1459,122 @@ details.hn-q .full{animation:gmin .3s var(--ease)}
   color:var(--text);background:rgba(255,255,255,.05);border:1px solid var(--line2);
   border-radius:12px;padding:13px;cursor:pointer;text-align:center;transition:all .2s}
 .ab-legal:hover{background:rgba(193,18,31,.12);border-color:rgba(232,35,47,.45);color:#fff}
+
+/* =====================================================================
+   מתיחת פנים · שלושת המשחקים
+   ===================================================================== */
+
+/* --- חדר המשחקים --- */
+.gm-live{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--red-hot);
+  margin-inline-end:9px;vertical-align:middle;animation:gmpulse 2.4s var(--ease) infinite}
+@keyframes gmpulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(232,35,47,.5)}
+  70%{opacity:.55;box-shadow:0 0 0 7px rgba(232,35,47,0)}}
+.gm-mode{opacity:0;animation:gmin .42s var(--ease) forwards}
+.gm-mode-glow{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .32s var(--ease)}
+.gm-mode:hover .gm-mode-glow{opacity:1}
+.m-solve .gm-mode-glow{background:radial-gradient(70% 140% at 6% 50%,rgba(201,162,39,.2),transparent 62%)}
+.m-killer .gm-mode-glow{background:radial-gradient(70% 140% at 6% 50%,rgba(193,18,31,.24),transparent 62%)}
+.m-victim .gm-mode-glow{background:radial-gradient(70% 140% at 6% 50%,rgba(111,147,168,.2),transparent 62%)}
+.gm-emoji{transition:transform .34s var(--ease)}
+.gm-mode:hover .gm-emoji{transform:scale(1.16) rotate(-6deg)}
+.gm-title span{position:relative}
+
+/* --- מסך שאלה --- */
+.gm-film{display:flex;gap:3px;margin-bottom:22px}
+.gm-film i{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,.08);
+  transition:background .4s var(--ease),transform .4s var(--ease)}
+.gm-film i.done{background:linear-gradient(90deg,var(--blood),var(--red))}
+.gm-film i.now{background:var(--red-hot);transform:scaleY(2.2);
+  box-shadow:0 0 12px rgba(232,35,47,.6)}
+.gm-qhead{position:relative;margin-bottom:24px;min-height:104px;padding-top:14px}
+.gm-ghost{position:absolute;inset-inline-start:-6px;top:0;font-family:var(--gm-mono);
+  font-size:112px;font-weight:700;line-height:.86;color:rgba(255,255,255,.04);
+  pointer-events:none;user-select:none;letter-spacing:-.06em}
+.gm-qtext{position:relative}
+.gm-qt{animation:gmin .42s var(--ease)}
+.gm-opt{position:relative;overflow:hidden}
+.gm-ink{position:absolute;inset-inline-end:22px;top:50%;width:8px;height:8px;border-radius:50%;
+  background:var(--red);transform:translate(50%,-50%) scale(0);opacity:0;pointer-events:none}
+.gm-opt.sel .gm-ink{animation:gmink .42s var(--ease) forwards}
+@keyframes gmink{0%{transform:translate(50%,-50%) scale(0);opacity:.85}
+  100%{transform:translate(50%,-50%) scale(58);opacity:.14}}
+.gm-opt.lock{pointer-events:none}
+.gm-opt.lock:not(.sel){opacity:.35;transform:none}
+
+/* --- תיק התוצאה --- */
+.gm-dossier{position:relative;border:1px solid rgba(193,18,31,.3);border-radius:20px;
+  overflow:hidden;margin-bottom:22px;background:linear-gradient(158deg,#1c1613,#0d0a09);
+  animation:gmup .5s var(--ease)}
+.gm-dos-tex{position:absolute;inset:0;pointer-events:none;opacity:.16;
+  background:url('/img/plate-strip.jpg') center/cover no-repeat;filter:contrast(1.2)}
+.gm-dos-top{position:relative;display:grid;grid-template-columns:1fr auto;gap:14px;
+  align-items:center;padding:16px 16px 0}
+.gm-face{position:relative;width:100%;max-width:180px;aspect-ratio:4/5;border-radius:13px;
+  overflow:hidden;background:#100d0b;box-shadow:0 10px 30px rgba(0,0,0,.55)}
+.gm-face .phwrap,.gm-face>svg{position:absolute;inset:0;width:100%;height:100%}
+.gm-face>svg{object-fit:cover}
+.gm-face-fr{position:absolute;inset:0;pointer-events:none;border-radius:13px;
+  box-shadow:inset 0 0 0 1px rgba(244,239,232,.14),inset 0 -50px 60px -30px rgba(10,9,8,.9)}
+.gm-dial{position:relative;width:118px;height:118px;flex:0 0 auto}
+.gm-dial svg{width:100%;height:100%;transform:rotate(-90deg)}
+.gm-dial circle{fill:none;stroke-width:5;stroke-linecap:round}
+.gm-dial .d-tr{stroke:rgba(255,255,255,.08)}
+.gm-dial .d-fg{stroke:url(#g) ;stroke:var(--red-hot);filter:drop-shadow(0 0 7px rgba(232,35,47,.55))}
+.gm-dial-n{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  gap:1px;line-height:1}
+.gm-dial-n b{font-family:var(--gm-mono);font-size:33px;font-weight:700;color:var(--text);
+  letter-spacing:-.03em}
+.gm-dial-n i{font-size:14px;color:var(--red-hot);font-style:normal;font-weight:700;
+  align-self:center;margin-top:9px}
+.gm-dial-l{position:absolute;inset-inline:0;bottom:16px;text-align:center;font-size:9px;
+  letter-spacing:.22em;color:var(--muted2);font-weight:700}
+.gm-dos-b{position:relative;padding:14px 17px 18px}
+.gm-dos-b .gm-code{display:block;margin-bottom:9px}
+.gm-dos-b h2{font-size:30px;font-weight:900;letter-spacing:-.035em;margin:0 0 7px;line-height:1.1}
+.gm-why li{opacity:0;animation:gmin .4s var(--ease) forwards}
+
+/* --- החקירה --- */
+.gm-beat{position:relative}
+.gm-beat-stamp{position:absolute;inset-inline-end:12px;top:8px;font-family:var(--gm-mono);
+  font-size:52px;font-weight:700;line-height:1;color:rgba(232,35,47,.09);letter-spacing:-.05em;
+  pointer-events:none;user-select:none}
+.gm-frag{position:relative;opacity:0;animation:gmin .42s var(--ease) forwards}
+.gm-pin{position:absolute;inset-inline-start:-5px;top:18px;width:9px;height:9px;border-radius:50%;
+  background:var(--red);box-shadow:0 0 0 3px rgba(193,18,31,.2),0 2px 5px rgba(0,0,0,.6)}
+/* חוט אדום שמחבר בין הראיות שנפתחו */
+.gm-frags.strung{position:relative}
+.gm-frags.strung:before{content:'';position:absolute;inset-inline-start:-1px;top:22px;bottom:22px;
+  width:1px;background:linear-gradient(180deg,transparent,rgba(193,18,31,.55) 12%,
+    rgba(193,18,31,.55) 88%,transparent);pointer-events:none}
+.gm-move{position:relative;overflow:hidden}
+.gm-move:before{content:'';position:absolute;inset-inline-start:0;top:0;bottom:0;width:2px;
+  background:var(--red);transform:scaleY(0);transform-origin:center;transition:transform .3s var(--ease)}
+.gm-move:hover:before,.gm-move.sel:before{transform:scaleY(1)}
+.gm-hud-i{position:relative;overflow:hidden}
+.gm-hud-i:after{content:'';position:absolute;inset-inline:0;bottom:0;height:2px;
+  background:linear-gradient(90deg,transparent,rgba(232,35,47,.5),transparent);opacity:.6}
+.gm-verdict{position:relative;overflow:hidden}
+.gm-verdict:before{content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.09),transparent);
+  transform:translateX(-100%);animation:gmsweep 1.6s var(--ease) .35s}
+@keyframes gmsweep{to{transform:translateX(100%)}}
+
+/* --- חדר הריאיון --- */
+.gm-int:after{content:'';position:absolute;inset:0;pointer-events:none;opacity:.5;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0 1px,transparent 1px 3px)}
+.gm-rec{z-index:2}
+.gm-third{position:relative;z-index:2}
+.gm-quotes{position:relative;z-index:2}
+
+@media (min-width:900px){
+  .gm-ghost{font-size:158px;top:-6px}
+  .gm-dos-top{padding:20px 20px 0}
+  .gm-face{max-width:210px}
+  .gm-dial{width:136px;height:136px}
+  .gm-dial-n b{font-size:38px}
+  .gm-dos-b h2{font-size:36px}
+}
+@media (prefers-reduced-motion:reduce){
+  .gm-mode,.gm-frag,.gm-why li{animation:none!important;opacity:1!important}
+  .gm-live,.gm-verdict:before,.gm-ink{animation:none!important}
+}

@@ -326,7 +326,7 @@ let _newVisitor = false;
 try {
   if (!localStorage.getItem('retzach.seen')) { localStorage.setItem('retzach.seen', '1'); _newVisitor = true; }
 } catch (e) {}
-const VERSION = 'ARCHIVE · V13';
+const VERSION = 'ARCHIVE · V14';
 
 /* דחיפת אירועים ל-GTM. אם GTM לא נטען — לא קורה כלום. */
 function dl(event, params) {
@@ -1019,13 +1019,14 @@ function openSeasons() {
 }
 window.openSeasons = openSeasons;
 
+const shut = () => { if (window.closeGames) window.closeGames(); closeSheet(); };
 const NAVACT = {
-  cases:   () => { goHome(); const t = $('#cases'); if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' }); },
-  seasons: () => { goHome(); openSeasons(); },
-  game:    () => openQuiz(),
-  search:  () => { goHome(); const q = $('#q');
-             if (q) { q.scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(() => q.focus(), 320); } },
-  about:   () => openAbout()
+  cases:   () => { shut(); goHome(); setTimeout(() => { const t = $('#cases'); if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 60); },
+  seasons: () => { shut(); goHome(); setTimeout(openSeasons, 90); },
+  game:    () => { closeSheet(); openQuiz(); },
+  search:  () => { shut(); goHome(); const q = $('#q');
+             if (q) { setTimeout(() => { q.scrollIntoView({ behavior: 'smooth', block: 'center' }); q.focus(); }, 120); } },
+  about:   () => { shut(); setTimeout(openAbout, 90); }
 };
 $$('#bnav .bn').forEach(b => b.onclick = () => {
   const k = b.dataset.nav;

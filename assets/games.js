@@ -304,9 +304,47 @@
   const state = { mode: null, i: 0, answers: [], run: null, card: null };
   let root;
 
+  /* רקע חי — קנבס אחד שממשיך לנשום בין המסכים ולא מצויר מחדש בכל מעבר */
+  let amb = null, ambRAF = 0;
+  function ambient() {
+    if (amb) return amb;
+    amb = document.createElement('canvas'); amb.className = 'gm-amb'; amb.setAttribute('aria-hidden', 'true');
+    const x = amb.getContext('2d');
+    let W = 0, H = 0, ps = [], t = 0;
+    const R = rng(20260818);
+    const size = () => {
+      const d = Math.min(1.6, devicePixelRatio || 1);
+      W = innerWidth; H = innerHeight;
+      amb.width = W * d; amb.height = H * d;
+      amb.style.width = W + 'px'; amb.style.height = H + 'px';
+      x.setTransform(d, 0, 0, d, 0, 0);
+      ps = Array.from({ length: Math.round(Math.min(190, W * H / 5200)) }, () => ({
+        x: R() * W, y: R() * H, s: .16 + R() * .5, r: R() < .07
+      }));
+      x.fillStyle = '#0a0908'; x.fillRect(0, 0, W, H);
+    };
+    size(); addEventListener('resize', size, { passive: true });
+    const loop = () => {
+      t += .0035;
+      x.fillStyle = 'rgba(10,9,8,.055)'; x.fillRect(0, 0, W, H);
+      ps.forEach((p, i) => {
+        const a = Math.sin(p.x * .0035 + t) * 1.9 + Math.cos(p.y * .0042 - t * .8) * 1.9;
+        p.x += Math.cos(a) * p.s; p.y += Math.sin(a) * p.s;
+        if (p.x < -8) p.x = W + 8; if (p.x > W + 8) p.x = -8;
+        if (p.y < -8) p.y = H + 8; if (p.y > H + 8) p.y = -8;
+        x.fillStyle = p.r ? 'rgba(193,18,31,.5)' : 'rgba(207,198,186,.24)';
+        x.fillRect(p.x, p.y, p.r ? 1.6 : 1, p.r ? 1.6 : 1);
+      });
+      ambRAF = requestAnimationFrame(loop);
+    };
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) loop();
+    return amb;
+  }
+
   function mount(html, cls) {
     if (!root) { root = document.createElement('div'); root.id = 'games'; document.body.appendChild(root); }
     root.innerHTML = `<div class="gm-scrim"></div><div class="gm-panel ${cls || ''}">${html}</div>`;
+    root.querySelector('.gm-panel').prepend(ambient());
     root.classList.add('on');
     document.body.style.overflow = 'hidden';
     const sc = root.querySelector('.gm-scrim'); if (sc) sc.onclick = close;
@@ -315,9 +353,18 @@
     root.querySelectorAll('[data-arch]').forEach(b => b.onclick = () => { close(); if (window.goHome) window.goHome(); });
   }
   function close() {
-    if (root) { root.classList.remove('on'); setTimeout(() => { if (root) root.innerHTML = ''; }, 260); }
+    if (root) { root.classList.remove('on'); setTimeout(() => { if (root && !root.classList.contains('on')) root.innerHTML = ''; }, 300); }
     document.body.style.overflow = '';
+    if (location.hash === '#game') { try { history.back(); } catch (e) { location.hash = ''; } }
   }
+  window.closeGames = close;
+  /* כפתור "אחורה" של המכשיר סוגר את המשחק במקום לצאת מהאתר */
+  if (location.hash !== '#game') { try { history.pushState({ g: 1 }, '', '#game'); } catch (e) {} }
+  addEventListener('popstate', () => {
+    if (root && root.classList.contains('on') && location.hash !== '#game') {
+      root.classList.remove('on'); document.body.style.overflow = '';
+    }
+  });
   /* סרגל ניווט קבוע — חזרה לארכיון, חזרה לחדר המשחקים, סגירה */
   function nav(title, sub, atHome) {
     return `<header class="gm-nav">
@@ -339,12 +386,13 @@
     mount(`${nav('תיק פתוח: המשחק', 'ארכיון הרצח', true)}
       <div class="gm-body">
         <div class="gm-plate" aria-hidden="true"></div>
-        <div class="gm-kicker">FILE ROOM · ${String(n).padStart(2,'0')} PLAYABLE FILES</div>
+        <div class="gm-kicker"><span class="gm-live"></span>FILE ROOM · ${String(n).padStart(2,'0')} PLAYABLE FILES</div>
         <h1 class="gm-title">תיק פתוח<span>המשחק</span></h1>
         <p class="gm-lede">שלושה משחקים שנבנים מ<b>כל התיקים שבארכיון</b>. כשנפתח תיק חדש — הוא מצטרף מעצמו, באותו רגע.</p>
         <div class="gm-modes">
           ${Object.entries(MODES).map(([k, m], i) => `
-            <button class="gm-mode" data-m="${k}">
+            <button class="gm-mode m-${k}" data-m="${k}" style="animation-delay:${90 + i * 90}ms">
+              <span class="gm-mode-glow" aria-hidden="true"></span>
               <span class="gm-emoji">${m.e}</span>
               <span class="gm-mt"><b>${m.t}</b><i>${m.s}</i></span>
               <span class="gm-go">${m.cta} <i>←</i></span>
@@ -366,25 +414,32 @@
   /* ---------- שאלוני האישיות ---------- */
   function question() {
     const M = MODES[state.mode], QS = state.mode === 'killer' ? Q_KILLER : Q_VICTIM;
-    const Q = QS[state.i], pct = (state.i / QS.length) * 100;
+    const Q = QS[state.i];
     mount(`${nav(M.t, `${state.i + 1} / ${QS.length}`)}
-      <div class="gm-body">
-        <div class="gm-bar"><i style="width:${pct}%"></i></div>
-        <div class="gm-step">${Q.s}<span>מתוך ${QS.length}</span></div>
-        <h2 class="gm-qt">${esc(Q.q)}</h2>
+      <div class="gm-body gm-qbody">
+        <div class="gm-film">${QS.map((_, i) => `<i class="${i < state.i ? 'done' : i === state.i ? 'now' : ''}"></i>`).join('')}</div>
+        <div class="gm-qhead">
+          <span class="gm-ghost" aria-hidden="true">${String(state.i + 1).padStart(2, '0')}</span>
+          <div class="gm-qtext">
+            <div class="gm-step">${Q.s}<span>מתוך ${QS.length}</span></div>
+            <h2 class="gm-qt">${esc(Q.q)}</h2>
+          </div>
+        </div>
         <div class="gm-opts">
-          ${Q.a.map((o, i) => `<button class="gm-opt" data-i="${i}" style="animation-delay:${50 + i * 52}ms">
+          ${Q.a.map((o, i) => `<button class="gm-opt" data-i="${i}" style="animation-delay:${50 + i * 58}ms">
+            <span class="gm-ink"></span>
             <span class="gm-oe">${o.e}</span><span class="gm-ot">${esc(o.t)}</span><span class="gm-oc"></span></button>`).join('')}
         </div>
-        ${state.i ? '<button class="gm-back">← שאלה קודמת</button>' : ''}
+        ${state.i ? '<button class="gm-back">→ שאלה קודמת</button>' : ''}
       </div>`);
     const back = root.querySelector('.gm-back');
     if (back) back.onclick = () => { state.i--; state.answers.pop(); question(); };
     root.querySelectorAll('.gm-opt').forEach(b => b.onclick = () => {
+      root.querySelectorAll('.gm-opt').forEach(o => o.classList.add('lock'));
       b.classList.add('sel');
       if (navigator.vibrate) try { navigator.vibrate(12); } catch (e) {}
       state.answers.push(Q.a[+b.dataset.i]);
-      setTimeout(() => { state.i++; state.i >= QS.length ? result() : question(); }, 220);
+      setTimeout(() => { state.i++; state.i >= QS.length ? result() : question(); }, 330);
     });
   }
 
@@ -422,17 +477,37 @@
     if (window.track) try { window.track('game:' + state.mode + ':' + k.id); } catch (e) {}
     if (window.dl) window.dl('game_result', { mode: state.mode, case_id: k.id, match: top.pct });
 
+    const poster = (window.SCENE && window.SCENE[k.scene]) ||
+      (window.plateFor ? window.plateFor(k.heroArt || 'portrait', 3) : '');
+    const face = k.heroKey && window.photo ? window.photo(k.heroKey, poster, { crop: 1 }) : poster;
+    const C = 2 * Math.PI * 44;
+
     mount(`${nav(MODES[state.mode].t, 'תוצאה')}
       <div class="gm-body">
         <div class="gm-vk">${V[0]} ${V[1]}</div>
-        <div class="gm-card">
-          <div class="gm-stamp-row"><span class="gm-code">${esc(k.caseLabel || 'CASE FILE')}</span>
-            <span class="gm-pct"><b>${top.pct}</b><i>%</i></span></div>
-          <h2>${esc(k.name)}</h2>
-          ${k.alias ? `<div class="gm-alias">${esc(k.alias)}</div>` : ''}
-          <p class="gm-line">${esc(strip(k.line).slice(0, 190))}…</p>
+
+        <div class="gm-dossier">
+          <div class="gm-dos-tex" aria-hidden="true"></div>
+          <div class="gm-dos-top">
+            <div class="gm-face">${face}<span class="gm-face-fr"></span></div>
+            <div class="gm-dial">
+              <svg viewBox="0 0 100 100" aria-hidden="true">
+                <circle cx="50" cy="50" r="44" class="d-tr"/>
+                <circle cx="50" cy="50" r="44" class="d-fg" style="stroke-dasharray:${C};stroke-dashoffset:${C}"/>
+              </svg>
+              <span class="gm-dial-n"><b data-to="${top.pct}">0</b><i>%</i></span>
+              <span class="gm-dial-l">התאמה</span>
+            </div>
+          </div>
+          <div class="gm-dos-b">
+            <span class="gm-code">${esc(k.caseLabel || 'CASE FILE')}</span>
+            <h2>${esc(k.name)}</h2>
+            ${k.alias ? `<div class="gm-alias">${esc(k.alias)}</div>` : ''}
+            <p class="gm-line">${esc(strip(k.line).slice(0, 190))}…</p>
+          </div>
         </div>
-        ${uniq.length ? `<div class="gm-sec"><h4>למה דווקא הוא</h4><ul class="gm-why">${uniq.map(w => `<li>${esc(w)}</li>`).join('')}</ul></div>` : ''}
+
+        ${uniq.length ? `<div class="gm-sec"><h4>למה דווקא הוא</h4><ul class="gm-why">${uniq.map((w, i) => `<li style="animation-delay:${140 + i * 90}ms">${esc(w)}</li>`).join('')}</ul></div>` : ''}
         <div class="gm-sec"><h4>כמעט יצא לך</h4>
           <div class="gm-alsos">${runners.map(r => `<button class="gm-also" data-id="${r.p.id}"><b>${esc(r.p.k.name)}</b><i>${r.pct}%</i></button>`).join('')}</div></div>
         <div class="gm-acts">
@@ -444,6 +519,26 @@
       </div>`);
     bindOpen();
     root.querySelector('#gm-share').onclick = () => share(txt);
+    dial(root.querySelector('.gm-dial'), top.pct);
+  }
+
+  /* חוגת ההתאמה — נמשכת, לא קופצת */
+  function dial(box, pct) {
+    if (!box) return;
+    const ring = box.querySelector('.d-fg'), num = box.querySelector('b');
+    const C = 2 * Math.PI * 44, tgt = C - (pct / 100) * C;
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      ring.style.strokeDashoffset = tgt; num.textContent = pct; return;
+    }
+    const t0 = performance.now(), D = 1150;
+    const ease = t => 1 - Math.pow(1 - t, 3);
+    const step = now => {
+      const t = Math.min(1, (now - t0) / D), e = ease(t);
+      ring.style.strokeDashoffset = C - (C - tgt) * e;
+      num.textContent = Math.round(pct * e);
+      if (t < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
   }
 
   /* ---------- החקירה ---------- */
@@ -586,8 +681,9 @@
         <div class="gm-meter-l">${R.unlocked >= R.clues.length
           ? 'כל מה שיש בתיק כבר מולך.'
           : `עוד <b>${next}</b> לידים ונפתח <b>${esc(R.clues[R.unlocked].t)}</b>`}</div>
-        <div class="gm-frags">
-          ${open.map(c => `<div class="gm-frag">
+        <div class="gm-frags${open.length > 1 ? ' strung' : ''}">
+          ${open.map((c, i) => `<div class="gm-frag" style="animation-delay:${i * 70}ms">
+            <span class="gm-pin"></span>
             <div class="gm-frag-h"><span class="gm-ref">${c.s}</span><b>${esc(c.t)}</b><span>${c.i}</span></div>
             <div class="gm-frag-b">${c.h}</div></div>`).join('')}
         </div>
@@ -609,6 +705,7 @@
         </div>
         ${flash || ''}
         <div class="gm-beat">
+          <span class="gm-beat-stamp" aria-hidden="true">${esc(String(B.y).match(/\d{4}/) ? String(B.y).match(/\d{4}/)[0] : B.y)}</span>
           <div class="gm-beat-y">${esc(B.y)}</div>
           <h2 class="gm-beat-t">${esc(B.t)}${B.kill ? '<span class="gm-kill">קורבן</span>' : ''}</h2>
           <p class="gm-beat-d">${esc(B.d)}</p>
