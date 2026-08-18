@@ -25,7 +25,9 @@
   ורווח תחתון שמבטיח שהפוטר והכפתורים אף פעם לא מוסתרים
 - **תנאי שימוש והבהרה משפטית** — מסך מלא: מחווה לא רשמית, מקורות ו-AI, זכויות יוצרים
   וכתובת להסרה מיידית (Maor@dubelteam.com)
-- **Google Tag Manager** (`GTM-MQT2SBTP`) + אירועי `dataLayer` מובנים:
+- **Google Tag Manager** (`GTM-MQT2SBTP`) ו-**Google Analytics 4** (`G-Q5FB5K0LN4`).
+  כל אירוע נשלח **לשני היעדים**: ל-GTM דרך `dataLayer` ול-GA4 דרך `gtag` ישירות —
+  כך שהאירועים מופיעים ב-GA4 גם בלי להגדיר תגית לכל אחד מהם ב-GTM. האירועים:
   `archive_view` · `nav_click` · `filter_season` · `game_start` · `game_result` ·
   `investigation_end` · `share_story` · `view_legal` · `view_seasons`
 - **28 תיקים סגורים** (עונות 1–3) — כולם במבנה זהה ומלא: 6 לשוניות, גיליון תיק, סיפור, ציטוטים,

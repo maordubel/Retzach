@@ -326,11 +326,18 @@ let _newVisitor = false;
 try {
   if (!localStorage.getItem('retzach.seen')) { localStorage.setItem('retzach.seen', '1'); _newVisitor = true; }
 } catch (e) {}
-const VERSION = 'ARCHIVE · V14';
+const VERSION = 'ARCHIVE · V15';
 
-/* דחיפת אירועים ל-GTM. אם GTM לא נטען — לא קורה כלום. */
+/* אירוע אחד — שני יעדים.
+   ל-GTM דרך dataLayer, ול-GA4 דרך gtag ישירות, כדי שהאירועים יופיעו
+   ב-GA4 גם בלי להגדיר תגית לכל אחד מהם ב-GTM. */
 function dl(event, params) {
-  try { (window.dataLayer = window.dataLayer || []).push(Object.assign({ event }, params || {})); } catch (e) {}
+  const p = {};
+  Object.entries(params || {}).forEach(([k, v]) => {
+    p[k] = typeof v === 'boolean' ? (v ? 1 : 0) : v;   /* GA4 מעדיף מספרים ומחרוזות */
+  });
+  try { (window.dataLayer = window.dataLayer || []).push(Object.assign({ event }, p)); } catch (e) {}
+  try { if (typeof window.gtag === 'function') window.gtag('event', event, p); } catch (e) {}
 }
 window.dl = dl;
 
