@@ -2,6 +2,15 @@
 <html lang="he" dir="rtl">
 <head>
 <meta charset="utf-8">
+
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-MQT2SBTP');</script>
+<!-- End Google Tag Manager -->
+
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
 
 <title>ארכיון הרצח — מחווה לקהילת פודקאסט רצח</title>
@@ -39,13 +48,14 @@
 <meta name="mobile-web-app-capable" content="yes">
 
 <!-- Fonts -->
+<link rel="preconnect" href="https://www.googletagmanager.com">
 <link rel="preconnect" href="https://commons.wikimedia.org">
 <link rel="preconnect" href="https://upload.wikimedia.org" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="/assets/style.css?v=12">
+<link rel="stylesheet" href="/assets/style.css?v=13">
 
 <script type="application/ld+json">
 {
@@ -68,6 +78,10 @@
 </script>
 </head>
 <body>
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MQT2SBTP"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
 <div id="grain"></div><div id="vignette"></div><div id="prog"></div>
 <div id="app">
 
@@ -92,7 +106,6 @@
       </div>
     </div>
     <p class="hero-sub"><b>מחווה לקהילת המאזינים של פודקאסט רצח — ולה בלבד.</b> נבנה כדי להעשיר את הידע של מאזינים שמעוניינים בכך: כל מה שדובר עליו בפרק — ראיות, קורבנות, מכתבים, צירי זמן ומקורות — במקום אחד. אינו מסונף לפודקאסט של <b>מאיה גזית ושי מגל</b> ואינו מחליף אותו.</p>
-    <div class="tape">ARCHIVE · V12</div>
     <div class="hero-art" id="hero-art"></div>
   </div>
 
@@ -100,9 +113,9 @@
     <button class="gamebanner" id="play-btn">
       <span class="gb-tex"></span><span class="gb-glow"></span><span class="gb-rule"></span>
       <span class="gb-in">
-        <span class="gb-code">FILE ROOM · 03 GAMES · <b id="gb-n">00</b> FILES</span>
-        <span class="gb-t">תיק<em>פתוח</em></span>
-        <span class="gb-s">החקירה · איזה רוצח סדרתי אתה · על ידי מי היית נרצח.<br><span class="gb-s2">שלושה משחקים שנבנים מכל התיקים שבארכיון.</span></span>
+        <span class="gb-code">FILE ROOM · <b id="gb-n">00</b> FILES</span>
+        <span class="gb-t">תיק פתוח<em>המשחק</em></span>
+        <span class="gb-s">החקירה · איזה רוצח סדרתי אתה · מי היה רוצח אותך</span>
         <span class="gb-cta">שחק <i>←</i></span>
       </span>
       <span class="gb-ticks" id="gb-ticks"></span>
@@ -155,6 +168,14 @@
       <b>ארכיון הרצח</b> · מחווה עצמאית ולא מסחרית לקהילת המאזינים של פודקאסט רצח<br>
       אינו מסונף לפודקאסט ואינו מחליף אותו · נועד להעשיר את מי שמעוניין בכך<br>
       התוכן המקורי, המחקר והעריכה שייכים ל<b>מאיה גזית ושי מגל</b>
+      <div class="foot-links">
+        <button class="foot-a" data-open="legal">תנאי שימוש והבהרה משפטית</button>
+        <span>·</span>
+        <button class="foot-a" data-open="about">אודות הארכיון</button>
+        <span>·</span>
+        <a class="foot-a" href="mailto:Maor@dubelteam.com">יצירת קשר</a>
+      </div>
+      <div class="foot-v" id="foot-v">ARCHIVE · V13</div>
     </div>
   </div>
   <div class="spacer"></div>
@@ -172,6 +193,26 @@
   <div id="k-content"></div>
   <div class="spacer"></div>
 </section>
+
+
+<!-- ============ BOTTOM NAV ============ -->
+<nav id="bnav" aria-label="ניווט ראשי">
+  <button class="bn" data-nav="cases" aria-current="page">
+    <svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+    <span>תיקים</span></button>
+  <button class="bn" data-nav="seasons">
+    <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+    <span>עונות</span></button>
+  <button class="bn bn-play" data-nav="game">
+    <svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.6 6.4.8-4.7 4.3 1.3 6.3L12 17l-5.6 3 1.3-6.3L3 9.4l6.4-.8z"/></svg>
+    <span>המשחק</span></button>
+  <button class="bn" data-nav="search">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+    <span>חיפוש</span></button>
+  <button class="bn" data-nav="about">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.6v.6"/></svg>
+    <span>אודות</span></button>
+</nav>
 
 <!-- ============ PLAYER ============ -->
 <div id="player">
@@ -196,12 +237,12 @@
 
 </div>
 
-<script src="/assets/data.js?v=12"></script>
-<script src="/assets/scenes.js?v=12"></script>
-<script src="/assets/cases.js?v=12"></script>
-<script src="/assets/custom-images.js?v=12"></script>
-<script src="/assets/editor-page.js?v=12"></script>
-<script src="/assets/app.js?v=12"></script>
+<script src="/assets/data.js?v=13"></script>
+<script src="/assets/scenes.js?v=13"></script>
+<script src="/assets/cases.js?v=13"></script>
+<script src="/assets/custom-images.js?v=13"></script>
+<script src="/assets/editor-page.js?v=13"></script>
+<script src="/assets/app.js?v=13"></script>
 <script>
 if ('serviceWorker' in navigator) {
   addEventListener('load', async () => {

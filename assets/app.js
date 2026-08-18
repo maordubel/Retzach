@@ -326,12 +326,21 @@ let _newVisitor = false;
 try {
   if (!localStorage.getItem('retzach.seen')) { localStorage.setItem('retzach.seen', '1'); _newVisitor = true; }
 } catch (e) {}
+const VERSION = 'ARCHIVE · V13';
+
+/* דחיפת אירועים ל-GTM. אם GTM לא נטען — לא קורה כלום. */
+function dl(event, params) {
+  try { (window.dataLayer = window.dataLayer || []).push(Object.assign({ event }, params || {})); } catch (e) {}
+}
+window.dl = dl;
+
 function track(path) {
   try {
     const l = JSON.parse(localStorage.getItem('retzach.hits') || '{}');
     l[path] = (l[path] || 0) + 1;
     localStorage.setItem('retzach.hits', JSON.stringify(l));
-    if (_newVisitor) localStorage.setItem('retzach.vis', String((+localStorage.getItem('retzach.vis') || 0) + 1));
+    dl('archive_view', { path });
+  if (_newVisitor) localStorage.setItem('retzach.vis', String((+localStorage.getItem('retzach.vis') || 0) + 1));
   } catch (e) {}
   try {
     const body = JSON.stringify({ p: path, n: _newVisitor });
@@ -410,6 +419,57 @@ function scene(key, cap) {
   return `<div class="sceneframe">${svg}${cap ? `<span class="scene-cap">${esc(cap)}</span>` : ''}</div>`;
 }
 
+/* ---------- תנאי שימוש והבהרה משפטית ---------- */
+function openLegal() {
+  dl('view_legal');
+  $('#sheet-body').innerHTML = `
+    <div class="grab"></div>
+    <div class="ab-hero">
+      <div class="mark">תנאי<br>שימוש</div>
+      <p><b>ארכיון הרצח הוא פרויקט מחווה לא רשמי</b>, שהוקם על ידי מעריצים מתוך הערכה עמוקה לפודקאסט וליצירה שלו.</p>
+    </div>
+
+    <div class="ab-block">
+      <h5>אודות האתר</h5>
+      <p>מטרת האתר היא <b>לפרגן, להנגיש את המידע לקהילת המאזינים ולשמר את התוכן</b>. האתר אינו קשור בצורה רשמית ליוצרי הפודקאסט, ואיננו מתיימרים לייצג אותם בשום אופן.</p>
+      <p>אין ברצוננו לפגוע, להזיק או לנכס לעצמנו זכויות כלשהן הקשורות לפודקאסט.</p>
+    </div>
+
+    <div class="ab-block">
+      <h5>מקורות מידע ואוטומציה</h5>
+      <p>האתר מתבסס על תכנים הנאספים <b>מקבוצת הפייסבוק של הפודקאסט</b> וממקורות מידע המעובדים באמצעות <b>בינה מלאכותית (AI)</b>.</p>
+      <div class="lgl-warn">
+        <b>דיוק המידע.</b> התכנים באתר מוצגים כפי שנשאבו או נוצרו אוטומטית. איננו אחראים על דיוקם, נכונותם או עדכניותם של הנתונים, והם <b>אינם מהווים חוות דעת רשמית או עובדתית מבוקרת</b>.
+      </div>
+      <p style="font-size:12.5px;color:var(--muted2)">לצד זאת — כל תיק בארכיון עובר בדיקה ידנית מול מקורות, וכל עובדה מקושרת למקור בלשונית "מקורות" של התיק. כשמקורות חלוקים, מוצגים שני הנתונים. כשטענה לא הוכחה, היא מסומנת במפורש ככזו.</p>
+    </div>
+
+    <div class="ab-block">
+      <h5>זכויות יוצרים וקניין רוחני</h5>
+      <p>אנו מכבדים את זכויות היוצרים והקניין הרוחני של יוצרי הפודקאסט וכל גורם אחר. <b>האתר פועל בתום לב.</b></p>
+      <p>אם זיהית באתר תוכן שלדעתך שגוי, פוגעני, או כזה שנעשה בו שימוש בניגוד לזכויות היוצרים שלך או לכל דין — <b>אנו מתנצלים מראש</b>, ומזמינים אותך ליצור איתנו קשר מיידי.</p>
+      <a class="lgl-cta" href="mailto:Maor@dubelteam.com?subject=%D7%90%D7%A8%D7%9B%D7%99%D7%95%D7%9F%20%D7%94%D7%A8%D7%A6%D7%97%20-%20%D7%A4%D7%A0%D7%99%D7%99%D7%94">
+        <span class="lgl-ico">✉</span>
+        <span><b>Maor@dubelteam.com</b><i>אנו מתחייבים לבדוק כל פנייה ולהסיר את התוכן הרלוונטי בהקדם האפשרי.</i></span>
+      </a>
+    </div>
+
+    <div class="ab-block">
+      <h5>מדיניות תוכן</h5>
+      <p>אין באתר תצלומי נתיחה, חומר מיני או תיעוד גרפי של קורבנות. חומר מזירת אירוע מוצג מטושטש מאחורי אישור מפורש. מגבלות משפטיות חיות — כגון צו האנונימיות בתיק מארי בל — מכובדות במלואן.</p>
+      <p>כשמאיה בחרה בפרק לא להציג משהו — הבחירה מכובדת גם כאן.</p>
+    </div>
+
+    <div class="ab-foot">
+      <b>ארכיון הרצח</b> · מחווה עצמאית ולא מסחרית<br>
+      נבנה על ידי <a href="https://www.dubelteam.com/?utm_source=retzach&utm_medium=legal&utm_campaign=archive" target="_blank" rel="noopener">Dubel Team</a>, אתונה
+      <span class="ab-v" id="lgl-v"></span>
+    </div>`;
+  showSheet();
+  const v = $('#lgl-v'); if (v) v.textContent = VERSION;
+}
+window.openLegal = openLegal;
+
 function openAbout() {
   $('#sheet-body').innerHTML = `
     <div class="grab"></div>
@@ -423,7 +483,11 @@ function openAbout() {
       <p><b>ארכיון הרצח</b> הוא מחווה עצמאית ולא מסחרית ל<b>קהילת המאזינים של פודקאסט רצח</b>. הוא נבנה בשביל הקהילה הזאת ובשבילה בלבד, ולמטרה אחת: <b>להעשיר את הידע של מאזינים שמעוניינים בכך</b> אחרי שהם מסיימים פרק.</p>
       <p>הוא <b>אינו מסונף לפודקאסט, אינו מייצג אותו ואינו מחליף אותו</b>. אין לו כל קשר רשמי למאיה גזית, לשי מגל או למי מטעמם. הוא לא נועד להרוויח, לא נועד לתחרות, ולא נועד להחליף האזנה.</p>
       <p>התוכן המקורי, המחקר, העריכה והמותג של הפודקאסט שייכים ל<b>מאיה גזית ושי מגל</b>. כל מה שיש כאן נאסף כדי לתת מקום אחד למה שכבר דובר עליו בפרק — ומעולם לא כתחליף לו.</p>
-      <p style="color:var(--muted2);font-size:12.5px">בקשת הסרה, תיקון או שינוי מכל סיבה — נענית מיד. <a href="https://www.dubelteam.com/contact.html" target="_blank" rel="noopener" style="color:var(--red-hot)">צרו קשר</a>.</p>
+      <div class="lgl-warn" style="margin-top:14px">
+        <b>מקורות ואוטומציה.</b> האתר מתבסס על תכנים מקבוצת הפייסבוק של הפודקאסט וממקורות המעובדים גם בעזרת <b>בינה מלאכותית</b>. חלק מהתכנים מוצגים כפי שנשאבו או נוצרו אוטומטית, ואינם מהווים חוות דעת רשמית או עובדתית מבוקרת.
+      </div>
+      <button class="ab-legal" id="ab-legal">לקריאת תנאי השימוש וההבהרה המשפטית המלאה ←</button>
+      <p style="color:var(--muted2);font-size:12.5px;margin-top:12px">בקשת הסרה, תיקון או שינוי מכל סיבה — נענית מיד: <a href="mailto:Maor@dubelteam.com" style="color:var(--red-hot)">Maor@dubelteam.com</a></p>
       <a class="plug" href="https://takemeout.dubelteam.com/?utm_source=retzach&utm_medium=about&utm_campaign=archive" target="_blank" rel="noopener"><img src="/img/dubelteam-mark.png" alt="" width="30" height="30" loading="lazy"><span>את הארכיון הזה בנינו ב־<b class="ltr">Dubel Team</b>, מאתונה. בנינו גם את <b class="ltr">TakeMeOut!</b> — שלושה מסלולים ליום שלם בעיר בשלושים שניות. חינם, בלי הרשמה.</span></a>
     </div>
 
@@ -479,6 +543,19 @@ function openAbout() {
 /* ---------- HOME ---------- */
 let filterS = 'all', query = '';
 
+/* מבנה נתונים מפורש של עונות ותיקים — נגזר מ-EPISODES, זמין גם לצריכה חיצונית */
+function seasonIndex() {
+  const out = {};
+  EPISODES.forEach(e => {
+    const s = out[e.s] = out[e.s] || { season: e.s, episodes: [], ready: 0, total: 0 };
+    s.episodes.push({ id: e.id, n: e.e, e2: e.e2 || null, name: e.name, date: e.date || null,
+      dur: e.dur || null, tag: e.tag || null, ready: !!e.ready });
+    s.total++; if (e.ready) s.ready++;
+  });
+  return Object.values(out).sort((a, b) => b.season - a.season);
+}
+window.SEASONS = seasonIndex;
+
 function renderChips() {
   const seasons = [...new Set(EPISODES.map(e => e.s))].sort((a, b) => b - a);
   $('#chips').innerHTML = `<button class="chip ${filterS === 'all' ? 'on' : ''}" data-s="all">הכל</button>` +
@@ -499,7 +576,8 @@ function renderCases() {
   $('#count').textContent = `${list.length} מתוך ${EPISODES.length}`;
   const box = $('#cases');
   if (!list.length) { box.innerHTML = `<div class="empty">לא נמצא תיק תואם.</div>`; return; }
-  box.innerHTML = list.map(e => `
+
+  const card = e => `
     <div class="case ${e.ready ? 'ready' : 'soon'}" ${e.ready ? `data-go="${e.id}"` : ''}>
       <div class="avatar${e.ready ? ' wide' : ''}">${e.img
         ? photo(e.img, (e.id && DB[e.id] && scene(DB[e.id].scene)) || plateFor('portrait', e.e), { crop: 1 })
@@ -507,7 +585,7 @@ function renderCases() {
       <div class="case-body">
         <h3>${esc(e.name)}</h3>
         <div class="case-meta">
-          <span>עונה ${e.s} · פרק ${e.e}</span><i class="dot"></i><span>${e.date}</span>
+          <span>עונה ${e.s} · פרק ${e.e}</span>${e.date ? `<i class="dot"></i><span>${e.date}</span>` : ''}
           ${e.dur ? `<i class="dot"></i><span>${e.dur}</span>` : ''}
         </div>
         <div style="margin-top:7px;display:flex;gap:5px;flex-wrap:wrap">
@@ -516,7 +594,25 @@ function renderCases() {
         </div>
       </div>
       <div class="arrow">${IC.arrow}</div>
-    </div>`).join('');
+    </div>`;
+
+  /* מקובץ לפי עונות עם כותרת דביקה — כדי שאפשר יהיה לנווט בלי גלילה אינסופית */
+  if (filterS === 'all' || filterS === 'ready') {
+    const bys = {};
+    list.forEach(e => { (bys[e.s] = bys[e.s] || []).push(e); });
+    box.innerHTML = Object.keys(bys).sort((a, b) => b - a).map(sn => {
+      const g = bys[sn], ready = g.filter(e => e.ready).length;
+      return `<section class="sgroup" id="season-${sn}">
+        <header class="sgroup-h">
+          <b>עונה ${sn}</b>
+          <span>${g.length} פרקים · ${ready} תיקים סגורים</span>
+        </header>
+        <div class="sgroup-b">${g.map(card).join('')}</div>
+      </section>`;
+    }).join('');
+  } else {
+    box.innerHTML = `<div class="sgroup-b">${list.map(card).join('')}</div>`;
+  }
   $$('.case[data-go]').forEach(c => c.onclick = () => openKiller(c.dataset.go));
   observe(box);
 }
@@ -668,7 +764,10 @@ function openKiller(id, skipHistory) {
               <h4>${esc(n.t)}</h4>
             </div>
             <p class="hn-d">${n.d}</p>
-            ${n.q ? `<div class="hn-q"><p>“${esc(n.q)}”</p><span>— מאיה גזית</span></div>` : ''}
+            ${n.q ? (n.q.length > 190
+              ? `<details class="hn-q fold"><summary><p>“${esc(n.q.slice(0, 170))}…”</p><b>קרא את הפוסט המלא</b></summary>
+                 <p class="full">“${esc(n.q)}”</p><span>— מאיה גזית, מקבוצת הפודקאסט</span></details>`
+              : `<div class="hn-q"><p>“${esc(n.q)}”</p><span>— מאיה גזית</span></div>`) : ''}
             ${n.link ? `<a class="hn-link" href="${n.link.u}" target="_blank" rel="noopener">${esc(n.link.t)} ${IC.ext}</a>` : ''}
           </div>`;
         }).join('')}
@@ -837,6 +936,13 @@ function openKiller(id, skipHistory) {
 }
 
 /* ---------- SHEET ---------- */
+function showSheet() {
+  $('#sheet').classList.add('on');
+  document.body.style.overflow = 'hidden';
+  if (window.hardenLinks) hardenLinks($('#sheet-body'));
+}
+window.showSheet = showSheet;
+
 function openSheet(e) {
   $('#sheet-body').innerHTML = `
     <div class="grab"></div>
@@ -881,7 +987,73 @@ loadMedia().then(() => { hydrateMedia(document); });
 $('#q').oninput = ev => { query = ev.target.value.trim(); renderCases(); };
 $('#back').onclick = goHome;
 $('#about-btn').onclick = openAbout;
-const _pb = $('#play-btn'); if (_pb) _pb.onclick = () => openQuiz();
+const _pb = $('#play-btn'); if (_pb) _pb.onclick = () => { dl('game_open', { from: 'banner' }); openQuiz(); };
+/* =====================================================================
+   תפריט תחתון · ניווט מהיר בין תיקים, עונות, המשחק, חיפוש ואודות
+   ===================================================================== */
+function openSeasons() {
+  const idx = seasonIndex();
+  dl('view_seasons');
+  $('#sheet-body').innerHTML = `
+    <div class="grab"></div>
+    <div class="ssh">
+      <div class="ssh-h"><b>עונות</b><span>${EPISODES.length} פרקים · ${EPISODES.filter(e => e.ready).length} תיקים סגורים</span></div>
+      <button class="ssn ${filterS === 'all' ? 'on' : ''}" data-s="all">
+        <b>כל הארכיון</b><i>${EPISODES.length} פרקים</i><span class="ssn-go">${IC.arrow}</span></button>
+      ${idx.map(s => `<button class="ssn ${filterS == s.season ? 'on' : ''}" data-s="${s.season}">
+        <b>עונה ${s.season}</b><i>${s.total} פרקים · ${s.ready} סגורים</i>
+        <span class="ssn-bar"><i style="width:${Math.round((s.ready / s.total) * 100)}%"></i></span>
+        <span class="ssn-go">${IC.arrow}</span></button>`).join('')}
+      <button class="ssn alt ${filterS === 'ready' ? 'on' : ''}" data-s="ready">
+        <b>רק תיקים סגורים</b><i>${EPISODES.filter(e => e.ready).length} תיקים מוכנים לקריאה</i>
+        <span class="ssn-go">${IC.arrow}</span></button>
+    </div>`;
+  showSheet();
+  const _al = $('#ab-legal'); if (_al) _al.onclick = openLegal;
+  $$('.ssn').forEach(b => b.onclick = () => {
+    filterS = b.dataset.s; query = ''; const qi = $('#q'); if (qi) qi.value = '';
+    renderChips(); renderCases(); closeSheet(); goHome();
+    dl('filter_season', { season: b.dataset.s });
+    setTimeout(() => { const t = $('#cases'); if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 120);
+  });
+}
+window.openSeasons = openSeasons;
+
+const NAVACT = {
+  cases:   () => { goHome(); const t = $('#cases'); if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' }); },
+  seasons: () => { goHome(); openSeasons(); },
+  game:    () => openQuiz(),
+  search:  () => { goHome(); const q = $('#q');
+             if (q) { q.scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(() => q.focus(), 320); } },
+  about:   () => openAbout()
+};
+$$('#bnav .bn').forEach(b => b.onclick = () => {
+  const k = b.dataset.nav;
+  $$('#bnav .bn').forEach(x => x.removeAttribute('aria-current'));
+  if (k !== 'game') b.setAttribute('aria-current', 'page');
+  dl('nav_click', { item: k });
+  (NAVACT[k] || NAVACT.cases)();
+});
+$$('.foot-a[data-open]').forEach(b => b.onclick = () => {
+  b.dataset.open === 'legal' ? openLegal() : openAbout();
+});
+const _fv = $('#foot-v'); if (_fv) _fv.textContent = VERSION;
+
+/* רשת ביטחון: כל קישור חיצוני נפתח בטאב חדש עם rel בטוח — גם אם נוסף מאוחר יותר */
+function hardenLinks(root) {
+  (root || document).querySelectorAll('a[href^="http"]').forEach(a => {
+    try { if (new URL(a.href).host === location.host) return; } catch (e) { return; }
+    a.target = '_blank';
+    const rel = new Set((a.rel || '').split(/\s+/).filter(Boolean));
+    rel.add('noopener'); rel.add('noreferrer'); a.rel = [...rel].join(' ');
+  });
+}
+window.hardenLinks = hardenLinks;
+hardenLinks();
+new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(n => {
+  if (n.nodeType === 1) hardenLinks(n.matches && n.matches('a') ? n.parentNode : n);
+}))).observe(document.body, { childList: true, subtree: true });
+
 paintTicks();
 $('#share-btn').onclick = () => share('ארכיון הרצח', BRAND.site);
 $('#share-k').onclick = () => {

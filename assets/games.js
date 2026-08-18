@@ -324,7 +324,7 @@
       <button class="gm-nb" data-arch title="חזרה לארכיון"><span>→</span> הארכיון</button>
       <div class="gm-nt"><b>${esc(title)}</b>${sub ? `<i>${esc(sub)}</i>` : ''}</div>
       ${atHome ? '<button class="gm-nb gm-x" data-close aria-label="סגירה">✕</button>'
-               : '<button class="gm-nb" data-home>המשחקים</button><button class="gm-nb gm-x" data-close aria-label="סגירה">✕</button>'}
+               : '<button class="gm-nb" data-home>המשחק</button><button class="gm-nb gm-x" data-close aria-label="סגירה">✕</button>'}
     </header>`;
   }
 
@@ -336,11 +336,11 @@
 
   function home() {
     const n = profiles().length;
-    mount(`${nav('חדר המשחקים', 'ארכיון הרצח', true)}
+    mount(`${nav('תיק פתוח: המשחק', 'ארכיון הרצח', true)}
       <div class="gm-body">
         <div class="gm-plate" aria-hidden="true"></div>
         <div class="gm-kicker">FILE ROOM · ${String(n).padStart(2,'0')} PLAYABLE FILES</div>
-        <h1 class="gm-title">תיק<span>פתוח</span></h1>
+        <h1 class="gm-title">תיק פתוח<span>המשחק</span></h1>
         <p class="gm-lede">שלושה משחקים שנבנים מ<b>כל התיקים שבארכיון</b>. כשנפתח תיק חדש — הוא מצטרף מעצמו, באותו רגע.</p>
         <div class="gm-modes">
           ${Object.entries(MODES).map(([k, m], i) => `
@@ -359,6 +359,7 @@
   function start(mode) {
     state.mode = mode; state.i = 0; state.answers = [];
     if (window.track) try { window.track('game:' + mode); } catch (e) {}
+    if (window.dl) window.dl('game_start', { mode });
     mode === 'solve' ? solveIntro() : question();
   }
 
@@ -419,6 +420,7 @@
       ? `עשיתי את השאלון של ארכיון הרצח ויצא לי ${k.name} — ${top.pct}% התאמה. 😐`
       : `לפי ארכיון הרצח, ${k.name} היה הכי מתאים לרצוח אותי (${top.pct}%). לילה טוב. 🫣`;
     if (window.track) try { window.track('game:' + state.mode + ':' + k.id); } catch (e) {}
+    if (window.dl) window.dl('game_result', { mode: state.mode, case_id: k.id, match: top.pct });
 
     mount(`${nav(MODES[state.mode].t, 'תוצאה')}
       <div class="gm-body">
@@ -727,6 +729,7 @@
     const missed = R.log.filter(l => l.po.real === -1);
     state.card = { won, sc, rk, k, R };
     if (window.track) try { window.track('game:solve:' + k.id + (won ? ':win' : ':cold')); } catch (e) {}
+    if (window.dl) window.dl('investigation_end', { case_id: k.id, won, score: sc, rank: rk[2], leads: R.leads });
 
     mount(`${nav('החקירה', won ? 'התיק נסגר' : 'התיק נשאר פתוח')}
       <div class="gm-int">
@@ -972,6 +975,7 @@
     cv.toBlob(async blob => {
       if (!blob) return;
       const file = new File([blob], 'retzach-investigation.png', { type: 'image/png' });
+      if (window.dl) window.dl('share_story', { case_id: c.k.id, won: c.won, score: c.sc });
       const txt = c.won
         ? `סגרתי את התיק ב"החקירה" של ארכיון הרצח. דרגה: ${c.rk[2]}. תנסה אתה 👇`
         : `התיק נשאר פתוח. הגעתי לדרגת ${c.rk[2]} ולא מצאתי אותו. תנסה אתה 👇`;

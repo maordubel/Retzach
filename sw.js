@@ -1,7 +1,7 @@
 /* ארכיון הרצח — service worker | Dubel Team
    אסטרטגיה: network-first לכל מה ששלנו, כדי שדיפלוי חדש נראה מיד.
    הקאש משמש רק כרשת ביטחון כשאין אינטרנט. */
-const V = 'retzach-v12';
+const V = 'retzach-v13';
 const CORE = ['/', '/index.html', '/assets/style.css', '/assets/data.js', '/assets/scenes.js', '/assets/cases.js',
   '/assets/games.js', '/assets/app.js'];
 
