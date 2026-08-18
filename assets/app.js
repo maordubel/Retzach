@@ -101,7 +101,7 @@ function openQuiz() {
   if (_gamesLoaded) { window.openGames && window.openGames(); return; }
   _gamesLoaded = true;
   const sc = document.createElement('script');
-  sc.src = '/assets/games.js?v=11';
+  sc.src = '/assets/games.js?v=12';
   sc.onerror = () => { _gamesLoaded = false; toast('לא הצלחתי לטעון את המשחקים. נסו שוב.'); };
   document.head.appendChild(sc);
 }
@@ -346,7 +346,7 @@ function loadAdmin() {
   if (window.openAdmin) return window.openAdmin();
   window.__adminWanted = true;
   const sc = document.createElement('script');
-  sc.src = '/assets/admin.js?v=11'; document.head.appendChild(sc);
+  sc.src = '/assets/admin.js?v=12'; document.head.appendChild(sc);
 }
 addEventListener('keydown', e => {
   if (e.ctrlKey && e.shiftKey && (e.key === 'A' || e.key === 'a')) { e.preventDefault(); loadAdmin(); }
@@ -424,6 +424,7 @@ function openAbout() {
       <p>הוא <b>אינו מסונף לפודקאסט, אינו מייצג אותו ואינו מחליף אותו</b>. אין לו כל קשר רשמי למאיה גזית, לשי מגל או למי מטעמם. הוא לא נועד להרוויח, לא נועד לתחרות, ולא נועד להחליף האזנה.</p>
       <p>התוכן המקורי, המחקר, העריכה והמותג של הפודקאסט שייכים ל<b>מאיה גזית ושי מגל</b>. כל מה שיש כאן נאסף כדי לתת מקום אחד למה שכבר דובר עליו בפרק — ומעולם לא כתחליף לו.</p>
       <p style="color:var(--muted2);font-size:12.5px">בקשת הסרה, תיקון או שינוי מכל סיבה — נענית מיד. <a href="https://www.dubelteam.com/contact.html" target="_blank" rel="noopener" style="color:var(--red-hot)">צרו קשר</a>.</p>
+      <a class="plug" href="https://takemeout.dubelteam.com/?utm_source=retzach&utm_medium=about&utm_campaign=archive" target="_blank" rel="noopener"><img src="/img/dubelteam-mark.png" alt="" width="30" height="30" loading="lazy"><span>את הארכיון הזה בנינו ב־<b class="ltr">Dubel Team</b>, מאתונה. בנינו גם את <b class="ltr">TakeMeOut!</b> — שלושה מסלולים ליום שלם בעיר בשלושים שניות. חינם, בלי הרשמה.</span></a>
     </div>
 
     <div class="ab-block">
