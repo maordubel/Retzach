@@ -42,6 +42,71 @@ const COST = {
   info: ['דף מידע', '']
 };
 
+/* =====================================================================
+   סיווג רשומות בלשונית "הקורבנות"
+   כל רשומה מקבלת תפקיד, כדי שהמספרים בגרפיקה יגזרו מהנתונים עצמם
+   ולא ייכתבו ידנית — כך תיק חדש מסתנכרן מעצמו.
+     v = קורבן · m = נעדר · s = ניצול/ה · o = דמות נוספת בתיק (חשוד, עד, בן משפחה)
+   ===================================================================== */
+const VROLE_FIX = {
+  'bell:3':'o', 'bell:4':'o', 'bell:5':'o',
+  'biblejohn:4':'s', 'biblejohn:5':'o', 'biblejohn:6':'o',
+  'lipstick:4':'o', 'lipstick:5':'o',
+  'glatman:5':'o',
+  'saevar:1':'m', 'saevar:2':'m', 'saevar:3':'o', 'saevar:4':'o', 'saevar:5':'o',
+  'saevar:6':'o', 'saevar:7':'o', 'saevar:8':'o', 'saevar:9':'o',
+  'head:1':'o', 'head:2':'o', 'head:3':'o', 'head:4':'o', 'head:5':'o', 'head:6':'o',
+  'nowak:2':'o', 'nowak:3':'o', 'nowak:4':'o',
+  'pickton:9':'s',
+  'corll:31':'s',
+  'kohlhepp:8':'s', 'grate:5':'s', 'khalil:4':'s', 'bernardo:4':'s',
+  'conahan:7':'s', 'glatman:4':'s'
+};
+const VROLE = (kid, v) => {
+  const fix = VROLE_FIX[kid + ':' + v.n]; if (fix) return fix;
+  if (v.r) return v.r;
+  const blob = [v.act || '', (v.tags || []).join(' '), v.county || ''].join(' ');
+  if (/שרד|ניצול/.test(blob)) return 's';
+  if (/נעדר(?!ות)/.test(blob)) return 'm';
+  if (/זוכ|נוקה|נשלל|שוחרר|חשוד|הופרך|לא הוכח|לא זוכתה|עד[ה]?\b/.test(blob)) return 'o';
+  return 'v';
+};
+/* ספירה נגזרת — group:N מאפשר רשומה אחת שמייצגת כמה קורבנות */
+function vCount(k) {
+  const out = { v: 0, m: 0, s: 0, o: 0, rows: (k.victims || []).length };
+  (k.victims || []).forEach(x => {
+    const r = VROLE(k.id, x);
+    out[r] += (r === 'v' || r === 'm') ? (x.group || 1) : 1;
+  });
+  out.all = out.v + out.m;
+  return out;
+}
+const VSEC = {
+  v: { t: 'הקורבנות',            h: 'קורבן' },
+  m: { t: 'הנעדרים',             h: 'נעדר' },
+  s: { t: 'ניצולים',             h: 'ניצול/ה' },
+  o: { t: 'דמויות נוספות בתיק',  h: 'דמות בתיק' }
+};
+/* מספר הקורבנות בכרטיסי הנתונים נגזר מהרשימה, לא נכתב ידנית */
+function statVal(k, st, c) {
+  if (!/קורבנ|נעדר|הרוגים/.test(st.l)) return st.n;
+  if (st.lock) return st.n;
+  if (/נעדר/.test(st.l)) return c.m || st.n;
+  return (c.all || st.n);
+}
+
+/* ---------- משחק הארכיון (נטען רק בלחיצה) ---------- */
+let _quizLoaded = false;
+function openQuiz() {
+  if (_quizLoaded) { window.openQuiz && window.openQuiz(); return; }
+  _quizLoaded = true;
+  const sc = document.createElement('script');
+  sc.src = '/assets/quiz.js?v=10';
+  sc.onerror = () => { _quizLoaded = false; toast('לא הצלחתי לטעון את המשחק. נסו שוב.'); };
+  document.head.appendChild(sc);
+}
+window.openQuizLoad = openQuiz;
+
 /* ---------- HELPERS ---------- */
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -268,7 +333,7 @@ function loadAdmin() {
   if (window.openAdmin) return window.openAdmin();
   window.__adminWanted = true;
   const sc = document.createElement('script');
-  sc.src = '/assets/admin.js?v=9'; document.head.appendChild(sc);
+  sc.src = '/assets/admin.js?v=10'; document.head.appendChild(sc);
 }
 addEventListener('keydown', e => {
   if (e.ctrlKey && e.shiftKey && (e.key === 'A' || e.key === 'a')) { e.preventDefault(); loadAdmin(); }
@@ -530,7 +595,8 @@ function openKiller(id, skipHistory) {
     <h1 class="kname">${esc(k.name)}</h1>
     <div><span class="kalias">${esc(k.alias)}</span></div>
     <p class="kline">${k.line}</p>
-    <div class="stats">${k.stats.map(s => `<div class="stat"><div class="n" data-n="${s.n}">0</div><div class="l">${esc(s.l)}</div></div>`).join('')}</div>
+    <div class="stats">${(() => { const c = vCount(k); return k.stats.map(s => { const n = statVal(k, s, c);
+      return `<div class="stat"><div class="n" data-n="${n}">0</div><div class="l">${esc(s.l)}</div></div>`; }).join(''); })()}</div>
   </div>
   </div>
 
@@ -604,28 +670,36 @@ function openKiller(id, skipHistory) {
           <div style="font-size:11px;color:var(--muted2);text-align:center;padding:4px 6px 2px;font-weight:300">לחצו על נקודה כדי לפתוח את התיק של הקורבן · המפה סכמטית</div>
         </div>
       </div>` : ''}
-      <div class="block rv"><div class="block-h"><span class="ico">${IC.users}</span><h3>${k.victims.length === 5 ? 'חמשת הקורבנות' : k.victims.length === 2 ? 'שתי הקורבנות' : 'הקורבנות'}</h3></div>
-        <div class="vgrid">${k.victims.map(v => `
+      ${(() => { const c = vCount(k);
+        const groups = ['v','m','s','o'].map(r => [r, k.victims.filter(v => VROLE(k.id, v) === r)]).filter(g => g[1].length);
+        /* אם התיק מציין מספר גדול יותר בגיליון — מסבירים את הפער במקום להתעלם ממנו */
+        const big = (k.stats || []).find(st => /רציח|קורבנ|הרוגים|מיוחסים/.test(st.l) && st.n > c.all && c.all > 0);
+        const onlyOther = !c.v && !c.m;
+        return groups.map(([r, list]) => `
+      <div class="block rv"><div class="block-h"><span class="ico">${IC.users}</span>
+        <h3>${r === 'o' && onlyOther ? 'מי היה בסיפור' : VSEC[r].t}</h3>
+        <span class="vcount">${(r === 'v' || r === 'm') && c[r] !== list.length ? c[r] + ' · ' + list.length + ' רשומות' : list.length}</span></div>
+        ${r === 'v' && big ? `<div class="note" style="margin:0 0 12px"><b>למה המספרים שונים?</b> בגיליון התיק מופיע <b>${big.n} ${esc(big.l)}</b> — כאן מתועדות <b>${c.all}</b> רשומות שיש להן שם ומקור. הפער עצמו הוא חלק מהתיק, והוא מוסבר בלשונית <b>ראיות</b>.</div>` : ''}
+        ${r === 'o' ? `<div class="note" style="margin:0 0 12px">${onlyOther ? 'בתיק הזה אין קורבנות רצח. הרשומות כאן הן האנשים שהסיפור נגע בהם.' : 'הרשומות כאן אינן קורבנות — הן חשודים, עדים, בני משפחה או מי שהורשע ולאחר מכן זוכה. הן מופיעות כדי שהתיק יהיה שלם.'}</div>` : ''}
+        <div class="vgrid">${list.map(v => `
           <div class="victim" id="vic-${v.n}">
             <div class="vhead">
               <div class="vnum">${v.n}</div>
-              <div class="t"><h4>${esc(v.name)}</h4><div class="m">${v.f ? 'בת' : 'בן'} ${v.age} · ${esc(v.from)}</div></div>
+              <div class="t"><h4>${esc(v.name)}</h4><div class="m">${v.age ? (v.f ? 'בת ' : 'בן ') + v.age + ' · ' : ''}${esc(v.from || '')}</div></div>
               <div class="vchev">${IC.chev}</div>
             </div>
             <div class="vbody"><div class="vbody-in">
               ${v.photos && v.photos.length ? `<div class="${v.photos.length > 1 ? 'vshots' : ''}">${v.photos.map(pk => `<div class="vphoto">${photo(pk, portraitPlate(v.name, '', 'ink'))}<span class="cap">${esc(v.name)}</span></div>`).join('')}</div>` : ''}
               ${v.media && v.media.length ? `<div class="mstrip">${v.media.map(mk => `<figure class="mtile">${media(mk, plateFor('profile'), { contain: mk.startsWith('map-') })}<figcaption>${esc((MEDIA[mk] || {}).cap || '')}</figcaption></figure>`).join('')}</div>` : ''}
               <div class="vtags">
-                <span class="vtag">${esc(v.date)}</span>
-                <span class="vtag">${esc(v.county)}</span>
-                <span class="vtag">${esc(v.act)}</span>
+                ${[v.date, v.county, v.act].filter(Boolean).map(t => `<span class="vtag">${esc(t)}</span>`).join('')}
               </div>
               <div class="prose" style="font-size:14px"><p>${v.d}</p></div>
               <div class="vtags" style="margin-top:12px;margin-bottom:0">${v.tags.map(t => `<span class="vtag" style="border-color:rgba(193,18,31,.3);color:#ff9c9c">${esc(t)}</span>`).join('')}</div>
               <div style="font-size:10.5px;color:var(--muted2);margin-top:10px;letter-spacing:.05em">${esc(v.en)}</div>
             </div></div>
           </div>`).join('')}</div>
-      </div>
+      </div>`).join(''); })()}
     </div>
 
     <!-- EVIDENCE -->
@@ -793,6 +867,7 @@ loadMedia().then(() => { hydrateMedia(document); });
 $('#q').oninput = ev => { query = ev.target.value.trim(); renderCases(); };
 $('#back').onclick = goHome;
 $('#about-btn').onclick = openAbout;
+const _pb = $('#play-btn'); if (_pb) _pb.onclick = () => openQuiz();
 $('#share-btn').onclick = () => share('ארכיון הרצח', BRAND.site);
 $('#share-k').onclick = () => {
   const id = new URLSearchParams(location.search).get('case');
@@ -848,3 +923,6 @@ console.log(
   'background:#c1121f;color:#fff;font-weight:700;padding:4px 8px;border-radius:4px 0 0 4px',
   'background:#17140f;color:#ded5c8;padding:4px 8px;border-radius:0 4px 4px 0'
 );
+
+/* חשיפה למודולים שנטענים בדרישה (לוח הבקרה, המשחק) */
+window.openKiller = openKiller; window.track = track; window.VROLE = VROLE; window.vCount = vCount;
